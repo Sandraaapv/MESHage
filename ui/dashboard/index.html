@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MESHage — Network Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation Header -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <span class="brand-title">MESHage</span>
+      </div>
+
+      <div class="nav-meta">
+        <div class="status-indicator">
+          <span class="status-dot live" id="connection-dot"></span>
+          <span class="status-label" id="connection-status">Connected</span>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-item">
+          <span class="nav-muted">Routing</span>
+          <span class="nav-value" id="active-routing-mode">Shortest path</span>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-item">
+          <span class="nav-muted">Topology</span>
+          <span class="nav-value" id="topology-stats">30 nodes</span>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-item">
+          <span class="nav-value" id="fps-counter">60 fps</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Metrics Strip (Thin, Divided) -->
+    <section class="metrics-strip" aria-label="Network metrics">
+      <div class="metric-cell" id="card-delivery">
+        <div class="metric-header-row">
+          <span class="metric-label">Delivery rate</span>
+          <canvas class="sparkline-canvas" id="spark-delivery" width="70" height="18"></canvas>
+        </div>
+        <div class="metric-value-row">
+          <span class="metric-mono-val" id="metric-delivery-rate">100.0</span>
+          <span class="metric-unit">%</span>
+        </div>
+      </div>
+
+      <div class="metric-cell" id="card-delay">
+        <span class="metric-label">Average delay</span>
+        <div class="metric-value-row">
+          <span class="metric-mono-val" id="metric-avg-delay">1.0</span>
+          <span class="metric-unit">hops</span>
+        </div>
+      </div>
+
+      <div class="metric-cell" id="card-overhead">
+        <span class="metric-label">Packets per message</span>
+        <div class="metric-value-row">
+          <span class="metric-mono-val" id="metric-packets-msg">1.0</span>
+          <span class="metric-unit">pkts</span>
+        </div>
+      </div>
+
+      <div class="metric-cell" id="card-active">
+        <span class="metric-label">Active nodes</span>
+        <div class="metric-value-row">
+          <span class="metric-mono-val" id="metric-active-nodes">30</span>
+          <span class="metric-unit" id="metric-total-nodes">/ 30</span>
+        </div>
+      </div>
+
+      <div class="metric-cell" id="card-recovery">
+        <span class="metric-label">Recovery time</span>
+        <div class="metric-value-row">
+          <span class="metric-mono-val" id="metric-recovery-time">0.0</span>
+          <span class="metric-unit">s</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls Sub-Header -->
+    <div class="controls-strip">
+      <div class="controls-left">
+        <button class="btn btn-danger" id="btn-emergency-alert">Send emergency alert</button>
+        <button class="btn" id="btn-kill-random">Kill random node</button>
+        <button class="btn" id="btn-reset">Reset</button>
+
+        <div class="segmented-control" id="routing-selector">
+          <button class="segment-btn" data-mode="flooding">Flooding</button>
+          <button class="segment-btn active" data-mode="shortest">Shortest path</button>
+          <button class="segment-btn" data-mode="gossip">Gossip (p=0.6)</button>
+        </div>
+      </div>
+
+      <div class="controls-right">
+        <div class="slider-control">
+          <label for="slider-path-loss" class="control-label">Path loss (n):</label>
+          <input
+            type="range"
+            id="slider-path-loss"
+            min="2.0"
+            max="5.0"
+            step="0.1"
+            value="3.0"
+            class="range-slider"
+          >
+          <span class="slider-value" id="path-loss-badge">3.0</span>
+        </div>
+
+        <div class="segmented-control" id="node-count-selector">
+          <button class="segment-btn" data-count="15">15</button>
+          <button class="segment-btn active" data-count="30">30</button>
+          <button class="segment-btn" data-count="50">50</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Workspace (Graph Canvas + Side Event Log) -->
+    <main class="main-workspace">
+      <!-- Full-bleed Graph Canvas Area -->
+      <div class="canvas-pane" id="canvas-wrapper">
+        <canvas id="mesh-canvas"></canvas>
+
+        <!-- Selection Banner (Quiet Overlay) -->
+        <div class="selection-banner hidden" id="selection-pill">
+          <span id="selection-text">Source: N0 &bull; Click destination to route</span>
+          <button class="btn-cancel" id="btn-cancel-selection">&times;</button>
+        </div>
+
+        <!-- Quiet Bottom Hint Line -->
+        <div class="canvas-bottom-bar">
+          <span class="canvas-hint" id="guide-text">
+            Drag node to move &bull; Click two nodes to route message &bull; Click node to kill or revive
+          </span>
+          <div class="canvas-legend">
+            <span class="legend-dot route"></span><span class="legend-text">Active route</span>
+            <span class="legend-dot default"></span><span class="legend-text">Link</span>
+            <span class="legend-dot dead"></span><span class="legend-text">Dead node</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Minimal Event Log Side Panel -->
+      <aside class="event-log-pane">
+        <div class="log-header">
+          <div class="log-title-row">
+            <span class="log-title">Events</span>
+            <span class="log-count" id="log-count">0</span>
+          </div>
+          <button class="btn-text" id="btn-clear-log">Clear</button>
+        </div>
+
+        <!-- Text-only Filter Tabs -->
+        <div class="log-filters">
+          <button class="filter-tab active" data-filter="ALL">All</button>
+          <button class="filter-tab" data-filter="ALERT">Alerts</button>
+          <button class="filter-tab" data-filter="DELIVERY">Delivery</button>
+          <button class="filter-tab" data-filter="NODE">Nodes</button>
+          <button class="filter-tab" data-filter="PARAM">Params</button>
+          <button class="filter-tab" data-filter="DROP">Drops</button>
+        </div>
+
+        <!-- Monospace Plain Event Stream -->
+        <div class="event-stream" id="event-stream"></div>
+
+        <!-- Auto-scroll Footer -->
+        <div class="log-footer">
+          <label class="auto-scroll-label">
+            <input type="checkbox" id="auto-scroll-cb" checked>
+            <span>Auto-scroll</span>
+          </label>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 """
 cryptography and replay protection for meshage
+AES-256-GCM authenticated encryption and bounded-memory replay protection
 """
 import os
 import time
@@ -7,6 +8,7 @@ from typing import Optional, Union
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from core.message import Message
+from core.router import SeenIdCache
 
 
 class CryptoError(Exception):
@@ -37,7 +39,9 @@ def load_key(key_path: str = "config/secret.key") -> bytes:
             content = f.read().strip()
             return bytes.fromhex(content)
 
-    os.makedirs(os.path.dirname(key_path), exist_ok=True)
+    dir_name = os.path.dirname(key_path)
+    if dir_name:
+        os.makedirs(dir_name, exist_ok=True)
     key = generate_key()
     with open(key_path, "w", encoding="utf-8") as f:
         f.write(key.hex())
@@ -90,10 +94,11 @@ def decrypt_payload(message: Message, key: Union[bytes, str]) -> str:
 
 
 class ReplayProtection:
-    def __init__(self, window_seconds: float = 60.0):
+    def __init__(self, window_seconds: float = 60.0, max_size: int = 2000):
         self.window_seconds = window_seconds
-        self.seen_ids = set()
-        self.seen_nonces = set()
+        # bounded cache with TTL equal to the replay window
+        self.seen_ids = SeenIdCache(max_size=max_size, ttl=window_seconds)
+        self.seen_nonces = SeenIdCache(max_size=max_size, ttl=window_seconds)
 
     def check_and_record(self, message: Message, current_time: Optional[float] = None) -> bool:
         now = current_time if current_time is not None else time.time()

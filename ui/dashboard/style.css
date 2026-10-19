@@ -1,0 +1,605 @@
+/* =========================================================
+   MESHage Minimal Dark Dashboard (Linear / Vercel Aesthetic)
+   Pure neutral greys, hairline borders, no neon glows/gradients
+   ========================================================= */
+
+:root {
+  /* Neutral Color Palette */
+  --bg: #050505;
+  --panel: #0A0A0A;
+  --surface-hover: #141414;
+  --border: #1C1C1C;
+  --border-strong: #2A2A2A;
+
+  /* Typography Colors */
+  --text: #EDEDED;
+  --text-muted: #7A7A7A;
+  --text-disabled: #3A3A3A;
+
+  /* Functional Accents */
+  --accent: #3DDC97;
+  --danger: #FF4D4D;
+
+  /* Fonts */
+  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Strict Dimensions */
+  --radius: 4px;
+  --duration: 150ms;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-system);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base App Layout */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--bg);
+}
+
+/* =========================================================
+   1. Top Navigation Bar
+   ========================================================= */
+.top-nav {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background-color: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+}
+
+.brand-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text);
+}
+
+.nav-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+}
+
+.status-dot.live {
+  background-color: var(--accent);
+}
+
+.status-dot.standalone {
+  background-color: var(--text-muted);
+}
+
+.status-label {
+  color: var(--text-muted);
+}
+
+.nav-divider {
+  width: 1px;
+  height: 14px;
+  background-color: var(--border);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-muted {
+  color: var(--text-muted);
+}
+
+.nav-value {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* =========================================================
+   2. Metrics Strip (Thin, Divided)
+   ========================================================= */
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background-color: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.metric-cell {
+  padding: 10px 16px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.metric-cell:last-child {
+  border-right: none;
+}
+
+.metric-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.metric-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.metric-mono-val {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-unit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sparkline-canvas {
+  width: 70px;
+  height: 18px;
+  display: block;
+}
+
+/* =========================================================
+   3. Controls Sub-Header
+   ========================================================= */
+.controls-strip {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background-color: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.controls-left, .controls-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Minimal 1px Buttons */
+.btn {
+  height: 26px;
+  padding: 0 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-system);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color var(--duration) ease, border-color var(--duration) ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+.btn-danger {
+  border-color: rgba(255, 77, 77, 0.4);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background-color: rgba(255, 77, 77, 0.1);
+  border-color: var(--danger);
+}
+
+/* Segmented Control */
+.segmented-control {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background-color: var(--bg);
+}
+
+.segment-btn {
+  height: 24px;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-system);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color var(--duration) ease, background-color var(--duration) ease;
+}
+
+.segment-btn:last-child {
+  border-right: none;
+}
+
+.segment-btn:hover {
+  color: var(--text);
+}
+
+.segment-btn.active {
+  background-color: var(--surface-hover);
+  color: var(--text);
+}
+
+/* Path-Loss Slider */
+.slider-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.range-slider {
+  -webkit-appearance: none;
+  width: 90px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-strong);
+  outline: none;
+  cursor: pointer;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+}
+
+.slider-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  min-width: 24px;
+}
+
+/* =========================================================
+   4. Main Workspace Layout
+   ========================================================= */
+.main-workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background-color: var(--bg);
+}
+
+/* Full-bleed Canvas Pane */
+.canvas-pane {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background-color: var(--bg);
+  cursor: crosshair;
+}
+
+#mesh-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Selection Banner Overlay */
+.selection-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--panel);
+  border: 1px solid var(--border-strong);
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  z-index: 10;
+  transition: opacity var(--duration) ease, transform var(--duration) ease;
+}
+
+.selection-banner.hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-6px);
+  pointer-events: none;
+}
+
+.btn-cancel {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px;
+}
+
+.btn-cancel:hover {
+  color: var(--text);
+}
+
+/* Quiet Bottom Bar */
+.canvas-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background-color: rgba(5, 5, 5, 0.85);
+  border-top: 1px solid var(--border);
+  pointer-events: none;
+}
+
+.canvas-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.canvas-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.legend-dot.route {
+  background-color: var(--accent);
+}
+
+.legend-dot.default {
+  background-color: var(--border-strong);
+}
+
+.legend-dot.dead {
+  background-color: transparent;
+  border: 1px solid var(--danger);
+}
+
+/* =========================================================
+   5. Event Log Pane
+   ========================================================= */
+.event-log-pane {
+  width: 340px;
+  background-color: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.log-header {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.log-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.log-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.log-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.btn-text {
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.btn-text:hover {
+  color: var(--text);
+}
+
+/* Text Tabs for Filters */
+.log-filters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg);
+  overflow-x: auto;
+}
+
+.filter-tab {
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: var(--radius);
+  transition: color var(--duration) ease, background-color var(--duration) ease;
+}
+
+.filter-tab:hover {
+  color: var(--text);
+}
+
+.filter-tab.active {
+  color: var(--text);
+  background-color: var(--surface-hover);
+}
+
+/* Event Stream */
+.event-stream {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.event-stream::-webkit-scrollbar {
+  width: 4px;
+}
+
+.event-stream::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+}
+
+.event-line {
+  display: flex;
+  gap: 8px;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.event-time {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.event-content {
+  color: var(--text);
+}
+
+.event-line.ALERT .event-content {
+  color: var(--danger);
+}
+
+/* Log Footer */
+.log-footer {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-top: 1px solid var(--border);
+  background-color: var(--panel);
+}
+
+.auto-scroll-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.auto-scroll-label input {
+  accent-color: var(--text);
+}
+
+/* =========================================================
+   6. Responsive Adaptations
+   ========================================================= */
+@media (max-width: 1024px) {
+  .event-log-pane {
+    width: 280px;
+  }
+  .metric-mono-val {
+    font-size: 18px;
+  }
+}

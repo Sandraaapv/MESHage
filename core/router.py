@@ -1,11 +1,59 @@
 """
 routing algorithms for meshage: flooding, shortest path (dijkstra), and gossip
+includes bounded seen-id caching with TTL expiry and loop prevention
 """
+from collections import OrderedDict
 import heapq
 import json
 import random
+import time
 from typing import Callable, Dict, List, Optional, Union
 from core.message import Message
+
+
+class SeenIdCache:
+    """
+    bounded cache with time-to-live (TTL) expiration for message deduplication
+    prevents memory leaks while ensuring recent duplicate packets are dropped
+    """
+
+    def __init__(self, max_size: int = 2000, ttl: float = 300.0):
+        self.max_size = max_size
+        self.ttl = ttl
+        self._cache: OrderedDict[str, float] = OrderedDict()
+
+    def add(self, item_id: str) -> None:
+        now = time.time()
+        self._cache[item_id] = now
+        self._cache.move_to_end(item_id)
+        self._cleanup(now)
+
+    def __contains__(self, item_id: str) -> bool:
+        now = time.time()
+        if item_id in self._cache:
+            if now - self._cache[item_id] <= self.ttl:
+                return True
+            else:
+                del self._cache[item_id]
+        return False
+
+    def _cleanup(self, now: float) -> None:
+        # evict expired items from oldest to newest
+        while self._cache:
+            first_key = next(iter(self._cache))
+            if now - self._cache[first_key] > self.ttl:
+                self._cache.popitem(last=False)
+            else:
+                break
+        # enforce max capacity ceiling
+        while len(self._cache) > self.max_size:
+            self._cache.popitem(last=False)
+
+    def __len__(self) -> int:
+        return len(self._cache)
+
+    def clear(self) -> None:
+        self._cache.clear()
 
 
 def dijkstra_next_hop(
@@ -14,7 +62,15 @@ def dijkstra_next_hop(
     dst: str,
 ) -> Optional[str]:
     # find first hop on shortest weighted path from src to dst
-    if src not in graph or dst not in graph or src == dst:
+    if not graph or src not in graph or src == dst:
+        return None
+
+    # collect all vertices (outgoing and incoming)
+    all_vertices = set(graph.keys())
+    for nbrs in graph.values():
+        all_vertices.update(nbrs.keys())
+
+    if dst not in all_vertices:
         return None
 
     distances = {src: 0.0}
@@ -58,10 +114,12 @@ class FloodingRouter:
         node_name: str,
         neighbors: Optional[Union[List[str], Callable[[], List[str]]]] = None,
         on_deliver: Optional[Callable[[Message], None]] = None,
+        seen_ttl: float = 300.0,
+        seen_max_size: int = 2000,
     ):
         self.node_name = node_name
         self.neighbors = neighbors if neighbors is not None else []
-        self.seen_ids = set()
+        self.seen_ids = SeenIdCache(max_size=seen_max_size, ttl=seen_ttl)
         self.delivered_messages: List[Message] = []
         self.on_deliver = on_deliver
 
@@ -91,8 +149,13 @@ class FloodingRouter:
         if message.ttl <= 0:
             return []
 
+        # prevent loops by excluding from_node, self, and any node already visited in path
+        visited_nodes = set(message.path)
         neighbors = self.get_neighbors()
-        return [nbr for nbr in neighbors if nbr != from_node and nbr != self.node_name]
+        return [
+            nbr for nbr in neighbors
+            if nbr != from_node and nbr != self.node_name and nbr not in visited_nodes
+        ]
 
 
 class ShortestPathRouter:
@@ -102,12 +165,14 @@ class ShortestPathRouter:
         neighbors: Optional[Union[List[str], Callable[[], List[str]]]] = None,
         on_deliver: Optional[Callable[[Message], None]] = None,
         missed_threshold: int = 3,
+        seen_ttl: float = 300.0,
+        seen_max_size: int = 2000,
     ):
         self.node_name = node_name
         self.neighbors = neighbors if neighbors is not None else []
         self.on_deliver = on_deliver
         self.missed_threshold = missed_threshold
-        self.seen_ids = set()
+        self.seen_ids = SeenIdCache(max_size=seen_max_size, ttl=seen_ttl)
         self.delivered_messages: List[Message] = []
 
         # neighbor_table: {neighbor_name: {"status": "UP", "missed_hellos": int, "cost": float}}
@@ -275,11 +340,16 @@ class ShortestPathRouter:
         # broadcast message
         if message.dst == "ALL":
             active_nbrs = self.get_active_neighbors()
-            return [nbr for nbr in active_nbrs if nbr != from_node and nbr != self.node_name]
+            visited_nodes = set(message.path)
+            return [
+                nbr for nbr in active_nbrs
+                if nbr != from_node and nbr != self.node_name and nbr not in visited_nodes
+            ]
 
         # unicast message: compute next hop using dijkstra
         next_hop = self.compute_route(message.dst)
-        if next_hop and next_hop != from_node and next_hop in self.get_active_neighbors():
+        # prevent forwarding loops by checking next_hop not in path
+        if next_hop and next_hop != from_node and next_hop not in message.path and next_hop in self.get_active_neighbors():
             return [next_hop]
 
         return []
@@ -293,13 +363,15 @@ class GossipRouter:
         p: float = 0.6,
         on_deliver: Optional[Callable[[Message], None]] = None,
         rng: Optional[random.Random] = None,
+        seen_ttl: float = 300.0,
+        seen_max_size: int = 2000,
     ):
         self.node_name = node_name
         self.neighbors = neighbors if neighbors is not None else []
         self.p = p
         self.on_deliver = on_deliver
         self.rng = rng if rng is not None else random.Random()
-        self.seen_ids = set()
+        self.seen_ids = SeenIdCache(max_size=seen_max_size, ttl=seen_ttl)
         self.delivered_messages: List[Message] = []
 
     def get_neighbors(self) -> List[str]:
@@ -328,9 +400,10 @@ class GossipRouter:
         if message.ttl <= 0:
             return []
 
+        visited_nodes = set(message.path)
         candidates = [
             nbr for nbr in self.get_neighbors()
-            if nbr != from_node and nbr != self.node_name
+            if nbr != from_node and nbr != self.node_name and nbr not in visited_nodes
         ]
         # forward to each neighbor with probability p
         return [nbr for nbr in candidates if self.rng.random() < self.p]

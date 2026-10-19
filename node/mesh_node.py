@@ -116,6 +116,8 @@ class MeshNode:
             if event_type in self.counters:
                 self.counters[event_type] += 1
             self.events.append(event)
+            if len(self.events) > 500:
+                self.events.pop(0)
             for q in list(self.event_subscribers):
                 try:
                     q.put_nowait(event)
@@ -127,7 +129,9 @@ class MeshNode:
     def is_allowed_sender(self, addr: Tuple[str, int]) -> bool:
         # only talk to the listed neighbors
         s_host, s_port = addr
-        for n_host, n_port in self.neighbor_addrs:
+        with self.lock:
+            neighbors = list(self.neighbor_addrs)
+        for n_host, n_port in neighbors:
             if s_port == n_port:
                 if s_host == n_host:
                     return True
@@ -138,11 +142,12 @@ class MeshNode:
 
     def get_active_neighbor_names(self) -> List[str]:
         # return list of known neighbor names that are UP
-        active = []
-        for name, info in self.neighbor_table.items():
-            if info.get("status") == "UP":
-                active.append(name)
-        return active
+        with self.lock:
+            active = []
+            for name, info in self.neighbor_table.items():
+                if info.get("status") == "UP":
+                    active.append(name)
+            return active
 
     def start(self) -> None:
         self.running = True
@@ -184,6 +189,9 @@ class MeshNode:
             except (socket.error, OSError):
                 if not self.running:
                     break
+            except Exception as e:
+                if self.running:
+                    self.log_event("error", f"Unhandled error in listener loop: {e}")
 
     def _handle_incoming_packet(self, data: bytes, sender_addr: Tuple[str, int]) -> None:
         # check neighbor whitelist
@@ -205,8 +213,8 @@ class MeshNode:
 
         # learn and update neighbor mapping
         if sender_name:
-            prev_status = self.neighbor_table.get(sender_name, {}).get("status")
             with self.lock:
+                prev_status = self.neighbor_table.get(sender_name, {}).get("status")
                 self.name_to_addr[sender_name] = sender_addr
                 self.addr_to_name[sender_addr] = sender_name
                 self.neighbor_table[sender_name] = {
@@ -252,14 +260,20 @@ class MeshNode:
                         "timestamp": msg.timestamp,
                         "type": msg.type,
                     })
+                    if len(self.messages) > 500:
+                        self.messages.pop(0)
 
         # forward message to next hops
         for nxt in next_hops:
             self._forward_to_neighbor(nxt, msg)
 
     def _forward_to_neighbor(self, nxt_name: str, msg: Message) -> None:
-        target_addr = self.name_to_addr.get(nxt_name)
+        with self.lock:
+            target_addr = self.name_to_addr.get(nxt_name)
         if not target_addr:
+            return
+
+        if not self.sock or not self.running:
             return
 
         try:
@@ -300,15 +314,20 @@ class MeshNode:
                 "timestamp": msg.timestamp,
                 "type": msg_type,
             })
+            if len(self.messages) > 500:
+                self.messages.pop(0)
 
         next_hops = self.router.handle(msg, from_node=None)
 
         if not next_hops:
             # fallback if neighbor names not yet mapped: send to all configured addresses
             if msg.dst == "ALL" or self.routing_mode == "flooding":
-                for addr in self.neighbor_addrs:
+                with self.lock:
+                    addrs = list(self.neighbor_addrs)
+                for addr in addrs:
                     try:
-                        self.sock.sendto(msg.to_json().encode("utf-8"), addr)
+                        if self.sock and self.running:
+                            self.sock.sendto(msg.to_json().encode("utf-8"), addr)
                     except Exception:
                         pass
             return msg
@@ -353,9 +372,12 @@ class MeshNode:
                 )
 
             hello_bytes = hello.to_json().encode("utf-8")
-            for addr in self.neighbor_addrs:
+            with self.lock:
+                addrs = list(self.neighbor_addrs)
+            for addr in addrs:
                 try:
-                    self.sock.sendto(hello_bytes, addr)
+                    if self.sock and self.running:
+                        self.sock.sendto(hello_bytes, addr)
                 except Exception:
                     pass
 

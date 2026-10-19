@@ -177,13 +177,15 @@ def main():
     )
 
     plt.title(
-        f"MESHage Fault Recovery: {failed_node} Failed -> Rerouted via {' -> '.join(healed_path)}\n"
+        f"MESHage Fault Recovery: Node {failed_node} Failed -> Rerouted via {' -> '.join(healed_path)}\n"
         f"Recovery Time: {recovery_time} steps",
         fontsize=12,
         fontweight="bold",
         pad=15,
     )
-    plt.axis("off")
+    plt.xlabel("X Position (m)", fontsize=11, fontweight="bold")
+    plt.ylabel("Y Position (m)", fontsize=11, fontweight="bold")
+    plt.grid(True, linestyle=":", alpha=0.5)
     plt.tight_layout()
 
     os.makedirs("results", exist_ok=True)

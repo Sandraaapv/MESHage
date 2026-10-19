@@ -1,0 +1,33 @@
+{
+  "routing_mode": "shortest",
+  "nodes": {
+    "A": {
+      "ip": "192.168.43.1",
+      "port": 5001,
+      "api_port": 5000,
+      "neighbors": [
+        "192.168.43.2:5001"
+      ],
+      "role": "Hotspot Host (Phone A)"
+    },
+    "B": {
+      "ip": "192.168.43.2",
+      "port": 5001,
+      "api_port": 5000,
+      "neighbors": [
+        "192.168.43.1:5001",
+        "192.168.43.3:5001"
+      ],
+      "role": "Relay Node (Phone B)"
+    },
+    "C": {
+      "ip": "192.168.43.3",
+      "port": 5001,
+      "api_port": 5000,
+      "neighbors": [
+        "192.168.43.2:5001"
+      ],
+      "role": "Client Node (Phone C)"
+    }
+  }
+}

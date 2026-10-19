@@ -41,8 +41,8 @@ def main():
 
     # success probability plot formatting
     ax2.set_xlabel("Distance (m)")
-    ax2.set_ylabel("Packet Success Probability")
-    ax2.set_title("Distance vs Success Probability")
+    ax2.set_ylabel("Packet Success Probability (0.0 to 1.0)")
+    ax2.set_title("Distance vs Packet Success Probability")
     ax2.set_ylim(-0.05, 1.05)
     ax2.grid(True, linestyle=":", alpha=0.6)
     ax2.legend(loc="lower left")

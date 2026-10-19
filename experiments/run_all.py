@@ -157,9 +157,9 @@ def run_experiment_1(trials: int = 20) -> Dict[str, dict]:
     stds = [stats[r]["delivery_rate_std"] for r in routers]
     ax1.bar(x_pos, means, yerr=stds, capsize=4, color=colors, alpha=0.85, edgecolor="#334155")
     ax1.set_xticks(x_pos)
-    ax1.set_xticklabels(["Flooding", "Shortest Path", "Gossip"])
+    ax1.set_xlabel("Routing Protocol")
     ax1.set_ylabel("Delivery Rate (%)")
-    ax1.set_title("Delivery Rate")
+    ax1.set_title("Delivery Rate vs Protocol")
     ax1.set_ylim(0, 110)
     ax1.grid(True, linestyle=":", alpha=0.5, axis="y")
 
@@ -169,8 +169,9 @@ def run_experiment_1(trials: int = 20) -> Dict[str, dict]:
     ax2.bar(x_pos, means, yerr=stds, capsize=4, color=colors, alpha=0.85, edgecolor="#334155")
     ax2.set_xticks(x_pos)
     ax2.set_xticklabels(["Flooding", "Shortest Path", "Gossip"])
+    ax2.set_xlabel("Routing Protocol")
     ax2.set_ylabel("Average Delay (hops)")
-    ax2.set_title("Average Delay")
+    ax2.set_title("Average Delay vs Protocol")
     ax2.grid(True, linestyle=":", alpha=0.5, axis="y")
 
     # packets transmitted
@@ -179,8 +180,9 @@ def run_experiment_1(trials: int = 20) -> Dict[str, dict]:
     ax3.bar(x_pos, means, yerr=stds, capsize=4, color=colors, alpha=0.85, edgecolor="#334155")
     ax3.set_xticks(x_pos)
     ax3.set_xticklabels(["Flooding", "Shortest Path", "Gossip"])
-    ax3.set_ylabel("Packets per Message (count)")
-    ax3.set_title("Packet Overhead")
+    ax3.set_xlabel("Routing Protocol")
+    ax3.set_ylabel("Packets per Message (packets/msg)")
+    ax3.set_title("Packet Overhead vs Protocol")
     ax3.grid(True, linestyle=":", alpha=0.5, axis="y")
 
     plt.suptitle("Routing Comparison: Flooding vs Shortest-Path vs Gossip", fontsize=13, fontweight="bold")
@@ -291,8 +293,8 @@ def run_experiment_2(trials: int = 20) -> Dict[int, dict]:
 
     ax1.errorbar(node_counts, f_means, yerr=f_stds, label="Flooding", color="#ef4444", marker="o", capsize=4)
     ax1.errorbar(node_counts, s_means, yerr=s_stds, label="Shortest Path", color="#0284c7", marker="s", capsize=4)
-    ax1.set_xlabel("Number of Nodes")
-    ax1.set_ylabel("Packets Transmitted per Message")
+    ax1.set_xlabel("Number of Nodes (count)")
+    ax1.set_ylabel("Packets Transmitted per Message (packets/msg)")
     ax1.set_title("Packet Overhead vs Network Size")
     ax1.grid(True, linestyle=":", alpha=0.5)
     ax1.legend()
@@ -305,7 +307,7 @@ def run_experiment_2(trials: int = 20) -> Dict[int, dict]:
 
     ax2.errorbar(node_counts, f_delays, yerr=f_delays_std, label="Flooding", color="#ef4444", marker="o", capsize=4)
     ax2.errorbar(node_counts, s_delays, yerr=s_delays_std, label="Shortest Path", color="#0284c7", marker="s", capsize=4)
-    ax2.set_xlabel("Number of Nodes")
+    ax2.set_xlabel("Number of Nodes (count)")
     ax2.set_ylabel("Average Delay (hops)")
     ax2.set_title("Delivery Delay vs Network Size")
     ax2.grid(True, linestyle=":", alpha=0.5)
@@ -535,9 +537,8 @@ def run_experiment_4(trials: int = 20) -> Dict[int, dict]:
     rec_stds = [stats[k]["recovery_time_std"] for k in fail_counts]
     ax1.bar(x_pos, rec_means, yerr=rec_stds, capsize=4, color="#0284c7", alpha=0.85, edgecolor="#334155", width=0.5)
     ax1.set_xticks(x_pos)
-    ax1.set_xticklabels(["1 Node", "2 Nodes", "3 Nodes"])
-    ax1.set_xlabel("Number of Failed Relay Nodes")
-    ax1.set_ylabel("Recovery Time (time steps)")
+    ax1.set_xlabel("Number of Failed Relay Nodes (nodes)")
+    ax1.set_ylabel("Recovery Time (simulation steps)")
     ax1.set_title("Recovery Time After Failure")
     ax1.grid(True, linestyle=":", alpha=0.5, axis="y")
 
@@ -547,7 +548,7 @@ def run_experiment_4(trials: int = 20) -> Dict[int, dict]:
     ax2.bar(x_pos, deliv_means, yerr=deliv_stds, capsize=4, color="#10b981", alpha=0.85, edgecolor="#334155", width=0.5)
     ax2.set_xticks(x_pos)
     ax2.set_xticklabels(["1 Node", "2 Nodes", "3 Nodes"])
-    ax2.set_xlabel("Number of Failed Relay Nodes")
+    ax2.set_xlabel("Number of Failed Relay Nodes (nodes)")
     ax2.set_ylabel("Delivery Rate (%)")
     ax2.set_title("Delivery Rate After Failure")
     ax2.set_ylim(0, 110)

@@ -120,13 +120,15 @@ def main():
     )
 
     plt.title(
-        f"MESHage Flooding: {' -> '.join(path)} ({hop_count} hops)\n"
+        f"MESHage Flooding Delivery Path: {' -> '.join(path)} ({hop_count} hops)\n"
         f"Transmissions: {net.total_transmissions} total, {net.dropped_transmissions} dropped by channel model",
         fontsize=12,
         fontweight="bold",
         pad=15,
     )
-    plt.axis("off")
+    plt.xlabel("X Position (m)", fontsize=11, fontweight="bold")
+    plt.ylabel("Y Position (m)", fontsize=11, fontweight="bold")
+    plt.grid(True, linestyle=":", alpha=0.5)
     plt.tight_layout()
 
     # save plot to results

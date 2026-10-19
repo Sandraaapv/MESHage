@@ -1,7 +1,7 @@
 """
 message format for meshage
 """
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, fields
 import json
 import time
 import uuid
@@ -26,8 +26,10 @@ class Message:
 
     @classmethod
     def from_json(cls, data: str) -> "Message":
-        # deserialize message from json string
+        # deserialize message from json string safely ignoring unknown fields
         if isinstance(data, bytes):
             data = data.decode("utf-8")
         parsed = json.loads(data)
-        return cls(**parsed)
+        valid_fields = {f.name for f in fields(cls)}
+        filtered = {k: v for k, v in parsed.items() if k in valid_fields}
+        return cls(**filtered)
