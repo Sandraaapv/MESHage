@@ -18,6 +18,7 @@ class Message:
     path: List[str] = field(default_factory=list)
     type: str = "chat"
     timestamp: float = field(default_factory=time.time)
+    nonce: str = ""
 
     def to_json(self) -> str:
         # serialize message to json string
