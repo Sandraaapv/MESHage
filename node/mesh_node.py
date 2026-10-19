@@ -6,6 +6,7 @@ import argparse
 import copy
 import json
 import os
+import queue
 import socket
 import sys
 import threading
@@ -47,6 +48,7 @@ class MeshNode:
         hello_interval: float = 3.0,
         missed_threshold: int = 3,
         gossip_p: float = 0.6,
+        api_port: Optional[int] = None,
     ):
         self.name = name
         self.port = port
@@ -55,6 +57,7 @@ class MeshNode:
         self.hello_interval = hello_interval
         self.missed_threshold = missed_threshold
         self.gossip_p = gossip_p
+        self.api_port = api_port
 
         # configured neighbor socket addresses
         self.neighbor_addrs: List[Tuple[str, int]] = neighbors if neighbors else []
@@ -69,8 +72,11 @@ class MeshNode:
         # in-memory event and message logs
         self.events: List[dict] = []
         self.messages: List[dict] = []
+        self.counters = {"sent": 0, "received": 0, "relayed": 0, "delivered": 0, "dropped": 0}
+        self.event_subscribers: List[queue.Queue] = []
         self.running = False
         self.sock: Optional[socket.socket] = None
+        self.api_thread: Optional[threading.Thread] = None
 
         # router setup
         self._init_router()
@@ -107,7 +113,14 @@ class MeshNode:
             "data": data or {},
         }
         with self.lock:
+            if event_type in self.counters:
+                self.counters[event_type] += 1
             self.events.append(event)
+            for q in list(self.event_subscribers):
+                try:
+                    q.put_nowait(event)
+                except Exception:
+                    pass
         # print to console
         print(f"[{time_str}] [{event_type.upper()}] {description}", flush=True)
 
@@ -148,6 +161,12 @@ class MeshNode:
         # start background hello and timeout thread
         self.hello_thread = threading.Thread(target=self._hello_loop, daemon=True)
         self.hello_thread.start()
+
+        # start background flask api server if api_port configured
+        if self.api_port:
+            from node.api import start_api_server
+            self.api_thread = start_api_server(self, host=self.host, port=self.api_port)
+            print(f"API server running on http://{self.host}:{self.api_port}")
 
     def stop(self) -> None:
         self.running = False
@@ -407,6 +426,7 @@ def main():
         help="Routing algorithm",
     )
     parser.add_argument("--hello-interval", type=float, default=2.5, help="Hello broadcast interval in seconds")
+    parser.add_argument("--api-port", type=int, default=None, help="Flask API HTTP port")
     parser.add_argument("--non-interactive", action="store_true", help="Run without stdin CLI loop")
 
     args = parser.parse_args()
@@ -419,6 +439,7 @@ def main():
         neighbors=neighbors,
         routing=args.routing,
         hello_interval=args.hello_interval,
+        api_port=args.api_port,
     )
 
     node.start()
