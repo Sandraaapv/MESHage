@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="MESHage - Offline Short Range Wireless Mesh Messenger">
+  <meta name="theme-color" content="#0B1220">
+  <link rel="manifest" href="manifest.json">
+  <title>MESHage - Offline Mesh</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="connection-dot" id="connectionDot" title="Network status: Connected"></div>
+        <h1 class="node-title" id="nodeNameHeader">MESHage</h1>
+      </div>
+
+      <div class="header-actions">
+        <!-- Neighbors button with signal bars -->
+        <button class="neighbor-btn" id="openNeighborsBtn" aria-label="View mesh neighbors">
+          <div class="signal-bars" id="headerSignalBars">
+            <span class="signal-bar bar-1 active"></span>
+            <span class="signal-bar bar-2 active"></span>
+            <span class="signal-bar bar-3"></span>
+          </div>
+          <span id="neighborCountText">0</span>
+        </button>
+
+        <!-- Theme toggle -->
+        <button class="icon-btn" id="themeToggleBtn" aria-label="Toggle light/dark theme">
+          <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Moon icon (for dark mode) -->
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Chat Messages Container -->
+    <main class="chat-container" id="chatContainer" role="log" aria-live="polite">
+      <!-- Empty state (shown when no messages exist) -->
+      <div class="empty-state" id="emptyState">
+        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <h3>Offline Mesh Network</h3>
+        <p>No messages yet. Messages hop peer-to-peer across phones within radio range with zero internet or cellular access.</p>
+      </div>
+    </main>
+
+    <!-- Fixed Composer Bottom -->
+    <footer class="composer-container">
+      <div class="composer-top">
+        <div class="dest-select-wrapper">
+          <label for="destSelect">To:</label>
+          <select id="destSelect" class="dest-select" aria-label="Recipient node">
+            <option value="ALL">Everyone (Broadcast)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="composer-row">
+        <!-- Emergency SOS Button with Progress Ring -->
+        <div class="emergency-btn-wrapper" id="sosWrapper" title="Press and hold 1.5s for emergency SOS">
+          <svg class="sos-ring" viewBox="0 0 48 48">
+            <circle class="sos-ring-circle" cx="24" cy="24" r="22"></circle>
+          </svg>
+          <button class="emergency-btn" id="sosBtn" aria-label="Emergency SOS: press and hold for 1.5 seconds">SOS</button>
+        </div>
+
+        <!-- Chat Input -->
+        <input type="text" id="messageInput" class="message-input" placeholder="Type a message..." autocomplete="off">
+
+        <!-- Send Button -->
+        <button class="send-btn" id="sendBtn" aria-label="Send message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Bottom Sheet (Neighbors List) -->
+    <div class="bottom-sheet-backdrop" id="bottomSheetBackdrop">
+      <div class="bottom-sheet" role="dialog" aria-modal="true" aria-label="Mesh Neighbors">
+        <div class="bottom-sheet-handle"></div>
+        <div class="bottom-sheet-header">
+          <h2>Mesh Neighbors</h2>
+          <button class="icon-btn" id="closeNeighborsBtn" aria-label="Close neighbors sheet">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="neighbors-list" id="neighborsList">
+          <p style="color:var(--muted); text-align:center; padding:16px;">Scanning for mesh neighbors...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Incoming Emergency Full-Screen Overlay -->
+    <div class="emergency-overlay" id="emergencyOverlay" role="alert" aria-live="assertive">
+      <svg class="emergency-overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <div class="emergency-title">Emergency Alert</div>
+      <div class="emergency-sender" id="emergencySender">From: Node X</div>
+      <div class="emergency-payload" id="emergencyPayload">Emergency text</div>
+      <div class="emergency-meta" id="emergencyMeta">Path: A > B > C &bull; 14:32:10</div>
+      <button class="ack-btn" id="ackEmergencyBtn">Acknowledge Alert</button>
+    </div>
+
+    <!-- Toasts Container for Neighbor Events -->
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

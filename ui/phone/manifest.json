@@ -1,0 +1,16 @@
+{
+  "name": "MESHage Offline Mesh",
+  "short_name": "MESHage",
+  "description": "Short-range offline mesh messaging without internet or cell networks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1220",
+  "theme_color": "#0B1220",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23121A2E' stroke='%232DD4BF' stroke-width='6'/%3E%3Cpath d='M30 65 L50 35 L70 65 Z' fill='none' stroke='%232DD4BF' stroke-width='6' stroke-linejoin='round'/%3E%3Ccircle cx='30' cy='65' r='6' fill='%2334D399'/%3E%3Ccircle cx='70' cy='65' r='6' fill='%2334D399'/%3E%3Ccircle cx='50' cy='35' r='6' fill='%232DD4BF'/%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
