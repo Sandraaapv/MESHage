@@ -1,27 +1,29 @@
 """
-demo script for flooding routing in meshage
+demo script for flooding routing with wireless channel model
 """
 import os
 import random
 import sys
 
-# ensure project root is in python path
+# ensure project root is on sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import matplotlib.pyplot as plt
 import networkx as nx
+from sim.channel import WirelessChannel
 from sim.network import Network
 
 
 def main():
-    # use seed for repeatable connected topology
-    seed = 1
+    # seed 30 demonstrates multi-hop delivery with realistic packet drops
+    seed = 30
     if len(sys.argv) > 1 and sys.argv[1].isdigit():
         seed = int(sys.argv[1])
     random.seed(seed)
 
     # 1. create 10 random nodes
-    net = Network(transmission_range=32.0)
+    channel = WirelessChannel(tx_power_dbm=14.0, pl_d0=40.0, n=3.0, sigma=4.0, sensitivity_dbm=-85.0)
+    net = Network(transmission_range=38.0, channel=channel, seed=seed)
     for i in range(10):
         net.add_node(f"N{i}", random.uniform(10, 90), random.uniform(10, 90))
     net.build_links()
@@ -37,17 +39,25 @@ def main():
     # check delivered message at destination
     delivered = net.nodes[last_node].router.delivered_messages
     if not delivered:
-        print(f"Message did not reach {last_node}")
+        print(f"Message dropped: could not reach {last_node} through noisy channel.")
+        print(
+            f"Transmissions: {net.total_transmissions} total "
+            f"({net.successful_transmissions} succeeded, {net.dropped_transmissions} dropped)"
+        )
         return
 
     msg = delivered[0]
     path = msg.path
     hop_count = len(path) - 1
 
-    # 3. print path and hop count
+    # 3. print path, hop count and channel statistics
     print("Message reached destination successfully!")
     print(f"Path: {' -> '.join(path)}")
     print(f"Hop count: {hop_count}")
+    print(
+        f"Transmissions: {net.total_transmissions} total "
+        f"({net.successful_transmissions} succeeded, {net.dropped_transmissions} dropped by channel noise)"
+    )
 
     # 4. draw the graph with networkx and matplotlib
     g = nx.Graph()
@@ -110,8 +120,9 @@ def main():
     )
 
     plt.title(
-        f"MESHage Flooding: {' -> '.join(path)} ({hop_count} hops)",
-        fontsize=13,
+        f"MESHage Flooding: {' -> '.join(path)} ({hop_count} hops)\n"
+        f"Transmissions: {net.total_transmissions} total, {net.dropped_transmissions} dropped by channel model",
+        fontsize=12,
         fontweight="bold",
         pad=15,
     )

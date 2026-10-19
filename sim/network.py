@@ -3,9 +3,11 @@ network simulation for meshage
 """
 import copy
 import math
+import random
 from typing import Dict, List, Optional, Tuple
 from core.message import Message
 from core.router import FloodingRouter
+from sim.channel import WirelessChannel
 
 
 class SimNode:
@@ -18,32 +20,50 @@ class SimNode:
 
 
 class Network:
-    def __init__(self, transmission_range: float = 35.0):
+    def __init__(
+        self,
+        transmission_range: float = 40.0,
+        channel: Optional[WirelessChannel] = None,
+        seed: Optional[int] = 42,
+    ):
         self.transmission_range = transmission_range
+        self.channel = channel if channel is not None else WirelessChannel()
+        self.seed = seed
+        self.rng = random.Random(seed)
         self.nodes: Dict[str, SimNode] = {}
         # (target_node, message, from_node)
         self.in_flight: List[Tuple[str, Message, Optional[str]]] = []
         self.time_step: int = 0
+        self.total_transmissions: int = 0
+        self.dropped_transmissions: int = 0
+        self.successful_transmissions: int = 0
+
+    def set_seed(self, seed: Optional[int]) -> None:
+        self.seed = seed
+        self.rng = random.Random(seed)
 
     def add_node(self, name: str, x: float, y: float) -> SimNode:
         node = SimNode(name, x, y)
         self.nodes[name] = node
         return node
 
+    def distance(self, name1: str, name2: str) -> float:
+        n1 = self.nodes[name1]
+        n2 = self.nodes[name2]
+        return math.hypot(n1.x - n2.x, n1.y - n2.y)
+
     def build_links(self) -> None:
-        # connect nodes within transmission range
+        # connect nodes within candidate transmission range
         for node in self.nodes.values():
             node.neighbors = []
 
         names = list(self.nodes.keys())
         for i in range(len(names)):
             for j in range(i + 1, len(names)):
-                n1 = self.nodes[names[i]]
-                n2 = self.nodes[names[j]]
-                dist = math.hypot(n1.x - n2.x, n1.y - n2.y)
+                dist = self.distance(names[i], names[j])
                 if dist <= self.transmission_range:
-                    n1.neighbors.append(n2.name)
-                    n2.neighbors.append(n1.name)
+                    self.nodes[names[i]].neighbors.append(names[j])
+                    self.nodes[names[j]].neighbors.append(names[i])
 
     def send_message(
         self,
@@ -67,7 +87,7 @@ class Network:
         return msg
 
     def step(self) -> int:
-        # move messages forward by one hop
+        # move messages forward by one hop with wireless channel model
         if not self.in_flight:
             return 0
 
@@ -77,6 +97,17 @@ class Network:
         for target_name, msg, from_node in current_batch:
             if target_name not in self.nodes:
                 continue
+
+            # check packet loss over wireless channel
+            if from_node and from_node in self.nodes:
+                dist = self.distance(from_node, target_name)
+                self.total_transmissions += 1
+                succeeded = self.channel.transmits_successfully(dist, rng=self.rng)
+                if not succeeded:
+                    self.dropped_transmissions += 1
+                    continue
+                self.successful_transmissions += 1
+
             target_node = self.nodes[target_name]
             next_hops = target_node.router.handle(msg, from_node=from_node)
             for nxt in next_hops:
