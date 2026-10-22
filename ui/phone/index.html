@@ -4,12 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="MESHage - Offline Short Range Wireless Mesh Messenger">
-  <meta name="theme-color" content="#0F1013">
+  <meta name="theme-color" content="#0E0F12">
   <link rel="manifest" href="manifest.json">
   <title>MESHage - Offline Mesh</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,89 +19,68 @@
       </div>
 
       <div class="header-actions">
-        <!-- Neighbors button with signal bars -->
-        <button class="neighbor-btn" id="openNeighborsBtn" aria-label="View mesh neighbors">
-          <div class="signal-bars" id="headerSignalBars">
-            <span class="signal-bar bar-1 active"></span>
-            <span class="signal-bar bar-2 active"></span>
-            <span class="signal-bar bar-3"></span>
-          </div>
-          <span id="neighborCountText">0</span>
-        </button>
-
-        <!-- Theme toggle -->
-        <button class="icon-btn" id="themeToggleBtn" aria-label="Toggle light/dark theme" title="Toggle theme">
-          <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <!-- Moon icon (for dark mode) -->
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-          </svg>
+        <!-- Live Peer count pill button (minimum 44x44px, opens sheet) -->
+        <button class="peer-count-pill" id="openNeighborsBtn" aria-label="View mesh neighbors">
+          <span class="peer-dot"></span>
+          <span id="neighborCountText">0 peers</span>
         </button>
       </div>
     </header>
 
-    <!-- Mesh Feature Banner Card (Inspiration Style) -->
+    <!-- Compact Mint Node Card -->
     <section class="mesh-banner-card" id="meshBannerCard">
       <div class="banner-top">
         <div class="banner-badge">
           <span class="live-dot"></span>
-          <span id="bannerStatusText">Live Mesh</span>
+          <span id="bannerStatusText">Mesh online</span>
         </div>
-        <div class="banner-route-tag" id="bannerRouteTag">P2P Multi-Hop</div>
+        <div class="banner-route-tag" id="bannerRouteTag">Ready</div>
       </div>
-      <h2 class="banner-title" id="bannerTitle">Mesh Radio Link</h2>
-      <p class="banner-subtitle" id="bannerSubtitle">Offline &bull; AES-256 Authenticated</p>
+      <h2 class="banner-title" id="bannerTitle">Node</h2>
+      <p class="banner-subtitle" id="bannerSubtitle">Wi-Fi UDP port 5001 &bull; AES-256 encrypted</p>
       
-      <!-- Avatars Row with pastel rings (Matching Inspo) -->
-      <div class="banner-avatars-row">
-        <div class="banner-avatars" id="bannerAvatars">
-          <!-- Populated dynamically by JS -->
+      <!-- Peer circles inside card: "You" (green ring), peers (white circle + hop count), offline (dashed) -->
+      <div class="banner-peers-container">
+        <div class="banner-peers-row" id="bannerPeersRow">
+          <!-- Rendered live by JS -->
         </div>
-        <button class="banner-action-btn" id="bannerActionBtn" aria-label="Open peers list">
-          <span>Peers</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
+        <div class="banner-hint" id="bannerHint" style="display: none;">Looking for peers on UDP 5001</div>
       </div>
     </section>
 
     <!-- Chat Messages Container -->
     <main class="chat-container" id="chatContainer" role="log" aria-live="polite">
-      <!-- Empty state (shown when no messages exist) -->
-      <div class="empty-state" id="emptyState">
-        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-          <polyline points="2 17 12 22 22 17"></polyline>
-          <polyline points="2 12 12 17 22 12"></polyline>
-        </svg>
-        <h3>Offline Mesh Network</h3>
-        <p>No messages yet. Messages hop peer-to-peer across phones within radio range with zero internet or cellular access.</p>
-      </div>
+      <!-- One small muted line when no messages -->
+      <div class="empty-line" id="emptyHint">No messages yet &bull; Direct wireless mesh</div>
     </main>
 
     <!-- Fixed Composer Bottom -->
     <footer class="composer-container">
-      <div class="composer-top">
-        <div class="dest-select-wrapper">
-          <label for="destSelect">To:</label>
-          <select id="destSelect" class="dest-select" aria-label="Recipient node">
-            <option value="ALL">Everyone (Broadcast)</option>
-          </select>
+      <!-- Recipient chips row ("To:" then Everyone, then known peers) -->
+      <div class="dest-chips-container" id="destChipsContainer">
+        <span class="dest-label">To:</span>
+        <div class="dest-chips-scroll" id="destChipsScroll">
+          <button type="button" class="dest-chip active" data-dst="ALL">Everyone</button>
         </div>
       </div>
 
       <div class="composer-row">
-        <!-- Emergency SOS Button with Progress Ring -->
-        <div class="emergency-btn-wrapper" id="sosWrapper" title="Press and hold 1.5s for emergency SOS">
-          <svg class="sos-ring" viewBox="0 0 48 48">
-            <circle class="sos-ring-circle" cx="24" cy="24" r="22"></circle>
-          </svg>
-          <button class="emergency-btn" id="sosBtn" aria-label="Emergency SOS: press and hold for 1.5 seconds">SOS</button>
+        <!-- Emergency SOS Button with Progress Ring and "Hold" caption -->
+        <div class="emergency-col">
+          <div class="emergency-btn-wrapper" id="sosWrapper" title="Press and hold 1.5s for emergency SOS">
+            <svg class="sos-ring" viewBox="0 0 48 48">
+              <circle class="sos-ring-circle" cx="24" cy="24" r="22"></circle>
+            </svg>
+            <button class="emergency-btn" id="sosBtn" type="button" aria-label="Emergency SOS: press and hold for 1.5 seconds">SOS</button>
+          </div>
+          <span class="sos-caption">Hold</span>
         </div>
 
         <!-- Chat Input -->
         <input type="text" id="messageInput" class="message-input" placeholder="Type a message..." autocomplete="off">
 
-        <!-- Send Button -->
-        <button class="send-btn" id="sendBtn" aria-label="Send message">
+        <!-- Send Button (disabled when input is empty) -->
+        <button class="send-btn disabled" id="sendBtn" type="button" aria-label="Send message" disabled>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>

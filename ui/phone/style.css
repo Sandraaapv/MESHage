@@ -1,13 +1,12 @@
 /* =========================================================
    MESHage Phone UI Stylesheet
-   Modern Mobile Design inspired by high-end dark & light modes
-   Soft Pastel Accents: Sage Mint, Lilac Lavender, Soft Butter Honey
+   Offline, Mobile-first, Dark Theme
+   Retains all original aesthetic tokens, colors & spacing
    ========================================================= */
 
 :root {
-  /* Fonts */
-  --font-display: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-system: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Offline System Fonts (No CDNs) */
+  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   /* Spacing & Radii */
   --space-1: 8px;
@@ -16,7 +15,7 @@
   --space-4: 28px;
 
   --radius-card: 24px;
-  --radius-banner: 26px;
+  --radius-banner: 24px;
   --radius-bubble: 22px;
   --radius-chip: 20px;
   --radius-pill: 9999px;
@@ -24,23 +23,21 @@
 
   --transition-fast: 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
   --transition-normal: 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  --transition-bounce: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* DARK THEME (Default) */
+  /* DARK THEME TOKENS (Preserved exactly) */
   --bg: #0E0F12;
   --surface: #17181D;
   --elevated: #202229;
   --elevated-hover: #292B34;
   --border: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.04);
-  --border-active: rgba(255, 255, 255, 0.18);
 
   --text: #FFFFFF;
   --text-secondary: #DCE0E8;
   --muted: #8E929F;
   --muted-subtle: #5C606D;
 
-  /* Inspo Pastel Accents */
+  /* Accent Colors */
   --mint-bg: #D4ECD7;
   --mint-text: #132D18;
   --mint-border: #9DD0A4;
@@ -77,7 +74,6 @@
   --bubble-mine-text: var(--mint-text);
   --bubble-mine-meta: #395B3E;
   --bubble-mine-status: #185E28;
-  --bubble-mine-border: transparent;
 
   --bubble-theirs-bg: #1D1F26;
   --bubble-theirs-text: #FFFFFF;
@@ -86,8 +82,6 @@
 
   --hop-chip-mine-bg: var(--lilac-bg);
   --hop-chip-mine-text: var(--lilac-text);
-  --hop-chip-theirs-bg: var(--elevated);
-  --hop-chip-theirs-text: var(--muted);
 
   --composer-bg: #17181D;
   --composer-input-bg: #202229;
@@ -99,62 +93,7 @@
   --shadow-dock: 0 -8px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* =========================================================
-   LIGHT THEME (The Reverse!)
-   Inverts colors cleanly with pale sage background & rich charcoal cards
-   ========================================================= */
-[data-theme="light"] {
-  --bg: #E8EFE6;
-  --surface: #FFFFFF;
-  --elevated: #F2F7F1;
-  --elevated-hover: #E6EFE4;
-  --border: rgba(0, 0, 0, 0.08);
-  --border-subtle: rgba(0, 0, 0, 0.04);
-  --border-active: rgba(0, 0, 0, 0.18);
-
-  --text: #101317;
-  --text-secondary: #2B2F38;
-  --muted: #666D7C;
-  --muted-subtle: #989EA9;
-
-  /* Reversed Card & Component Specifics */
-  --banner-bg: #14161C;
-  --banner-text: #FFFFFF;
-  --banner-subtext: #A6ABB8;
-  --banner-badge-bg: var(--mint-bg);
-  --banner-badge-text: var(--mint-text);
-  --banner-btn-bg: #FFFFFF;
-  --banner-btn-text: #14161C;
-
-  --bubble-mine-bg: #14161C;
-  --bubble-mine-text: #FFFFFF;
-  --bubble-mine-meta: #A4A9B7;
-  --bubble-mine-status: #489B55;
-  --bubble-mine-border: transparent;
-
-  --bubble-theirs-bg: #FFFFFF;
-  --bubble-theirs-text: #101317;
-  --bubble-theirs-meta: var(--muted);
-  --bubble-theirs-border: var(--border);
-
-  --hop-chip-mine-bg: #DCE8DA;
-  --hop-chip-mine-text: #17361D;
-  --hop-chip-theirs-bg: var(--elevated);
-  --hop-chip-theirs-text: var(--muted);
-
-  --composer-bg: #FFFFFF;
-  --composer-input-bg: #F2F7F1;
-  --composer-send-bg: #14161C;
-  --composer-send-text: #FFFFFF;
-
-  --shadow-soft: 0 4px 16px rgba(16, 19, 23, 0.06);
-  --shadow-card: 0 10px 30px rgba(16, 19, 23, 0.09);
-  --shadow-dock: 0 -8px 24px rgba(16, 19, 23, 0.08);
-}
-
-/* =========================================================
-   Base Resets & Container
-   ========================================================= */
+/* Base Resets */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -171,7 +110,6 @@ html, body {
   overflow: hidden;
   font-size: 15px;
   line-height: 1.5;
-  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 .app-container {
@@ -184,16 +122,15 @@ html, body {
   position: relative;
   background-color: var(--bg);
   overflow: hidden;
-  transition: background-color var(--transition-normal);
 }
 
-button:focus-visible, input:focus-visible, select:focus-visible {
+button:focus-visible, input:focus-visible {
   outline: 2px solid var(--mint-accent);
   outline-offset: 2px;
 }
 
 /* =========================================================
-   1. Header
+   1. Header (Peer count pill, no theme toggle)
    ========================================================= */
 .app-header {
   height: 60px;
@@ -203,7 +140,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   padding: 0 var(--space-2);
   z-index: 20;
   background-color: var(--bg);
-  transition: background-color var(--transition-normal);
+  flex-shrink: 0;
 }
 
 .header-left {
@@ -240,12 +177,11 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   gap: var(--space-1);
 }
 
-.neighbor-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 14px;
-  height: 38px;
+/* Live Peer Count Pill (>= 44x44px) */
+.peer-count-pill {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
@@ -253,89 +189,55 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   box-shadow: var(--shadow-soft);
   transition: all var(--transition-fast);
 }
 
-.neighbor-btn:hover {
+.peer-count-pill:hover {
   background: var(--elevated-hover);
   transform: translateY(-1px);
 }
 
-.neighbor-btn:active {
+.peer-count-pill:active {
   transform: scale(0.96);
 }
 
-.signal-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 2.5px;
-  height: 13px;
-}
-
-.signal-bar {
-  width: 3px;
-  background-color: var(--muted);
-  border-radius: 1px;
-}
-
-.bar-1 { height: 4px; }
-.bar-2 { height: 8px; }
-.bar-3 { height: 13px; }
-
-.signal-bar.active {
-  background-color: var(--mint-accent);
-}
-
-.icon-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  width: 38px;
-  height: 38px;
+.peer-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: var(--shadow-soft);
-  transition: all var(--transition-fast);
-}
-
-.icon-btn:hover {
-  background: var(--elevated-hover);
-  transform: scale(1.05);
-}
-
-.icon-btn:active {
-  transform: scale(0.95);
+  background-color: var(--success);
+  box-shadow: 0 0 8px var(--success);
+  flex-shrink: 0;
 }
 
 /* =========================================================
-   2. Inspiration Featured Mesh Banner Card
+   2. Compact Mint Node Card
    ========================================================= */
 .mesh-banner-card {
-  margin: 4px var(--space-2) var(--space-1) var(--space-2);
-  padding: 16px 18px;
+  margin: 4px var(--space-2) 6px var(--space-2);
+  padding: 12px 14px;
   background-color: var(--banner-bg);
   color: var(--banner-text);
-  border-radius: var(--radius-banner);
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-soft);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  transition: all var(--transition-normal);
+  flex-shrink: 0;
 }
 
-/* Subtle decorative pastel corner gradient */
 .mesh-banner-card::after {
   content: "";
   position: absolute;
   top: -20px;
   right: -20px;
-  width: 90px;
-  height: 90px;
+  width: 80px;
+  height: 80px;
   background: radial-gradient(circle, rgba(214, 199, 247, 0.35) 0%, transparent 70%);
   pointer-events: none;
 }
@@ -344,7 +246,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .banner-badge {
@@ -353,7 +255,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   gap: 6px;
   background-color: var(--banner-badge-bg);
   color: var(--banner-badge-text);
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
   font-size: 0.72rem;
   font-weight: 800;
@@ -373,35 +275,34 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .banner-route-tag {
   background: var(--lilac-bg);
   color: var(--lilac-text);
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
 .banner-title {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.25;
+  line-height: 1.2;
   margin-bottom: 2px;
 }
 
 .banner-subtitle {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--banner-subtext);
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
-.banner-avatars-row {
+.banner-peers-container {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-1);
+  flex-direction: column;
+  gap: 4px;
 }
 
-.banner-avatars {
+.banner-peers-row {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -410,129 +311,77 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   padding: 2px 0;
 }
 
-.banner-avatars::-webkit-scrollbar {
+.banner-peers-row::-webkit-scrollbar {
   display: none;
 }
 
-.banner-avatar-item {
+.banner-peer-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  min-width: 44px;
+  min-height: 44px;
   cursor: pointer;
-  transition: transform var(--transition-fast);
   flex-shrink: 0;
+  user-select: none;
 }
 
-.banner-avatar-item:hover {
-  transform: translateY(-2px);
-}
-
-.banner-avatar-item:active {
-  transform: scale(0.95);
-}
-
-/* Avatar Ring Wrapper matching inspiration avatars */
-.avatar-ring-wrapper {
+.banner-peer-circle {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  padding: 2.5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
-}
-
-.avatar-ring-wrapper.small {
-  width: 38px;
-  height: 38px;
-  padding: 2px;
-}
-
-.avatar-circle {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  transition: transform var(--transition-fast);
 }
 
-/* Avatar Pastel Ring Colors */
-.ring-mint {
-  background: var(--mint-border);
+.banner-peer-item:hover .banner-peer-circle {
+  transform: scale(1.05);
 }
-.ring-mint .avatar-circle {
+
+.banner-peer-item:active .banner-peer-circle {
+  transform: scale(0.95);
+}
+
+/* "You" circle with green ring */
+.banner-peer-circle.is-you {
+  border: 2.5px solid var(--mint-accent);
   background: var(--mint-bg);
   color: var(--mint-text);
+  box-shadow: 0 0 8px rgba(72, 155, 85, 0.35);
 }
 
-.ring-lilac {
-  background: var(--lilac-border);
-}
-.ring-lilac .avatar-circle {
-  background: var(--lilac-bg);
-  color: var(--lilac-text);
-}
-
-.ring-butter {
-  background: var(--butter-border);
-}
-.ring-butter .avatar-circle {
-  background: var(--butter-bg);
-  color: var(--butter-text);
+/* Peer white circle */
+.banner-peer-circle.is-peer {
+  background: #FFFFFF;
+  color: #132D18;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-.ring-coral {
-  background: #FFA5AE;
-}
-.ring-coral .avatar-circle {
-  background: var(--coral-bg);
-  color: var(--coral-text);
-}
-
-.ring-muted {
-  background: var(--muted-subtle);
-}
-.ring-muted .avatar-circle {
-  background: var(--elevated);
-  color: var(--muted);
+/* Offline node with dashed circle */
+.banner-peer-circle.is-offline {
+  border: 2px dashed rgba(19, 45, 24, 0.5);
+  background: transparent;
+  color: #456C4C;
 }
 
-.avatar-label {
+.banner-peer-label {
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--banner-text);
   white-space: nowrap;
 }
 
-.banner-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background-color: var(--banner-btn-bg);
-  color: var(--banner-btn-text);
-  border: none;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
+.banner-hint {
   font-size: 0.76rem;
-  font-weight: 700;
-  cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: all var(--transition-fast);
-}
-
-.banner-action-btn:hover {
-  transform: scale(1.05);
-}
-
-.banner-action-btn:active {
-  transform: scale(0.96);
+  font-weight: 600;
+  color: var(--banner-subtext);
+  margin-top: 2px;
 }
 
 /* =========================================================
@@ -549,39 +398,15 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   overscroll-behavior-y: contain;
 }
 
-/* Empty State */
-.empty-state {
-  margin: auto 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Small muted line when no messages */
+.empty-line {
   text-align: center;
-  padding: var(--space-4) var(--space-3);
-  background: var(--surface);
-  border-radius: var(--radius-card);
-  border: 1px dashed var(--border);
-  box-shadow: var(--shadow-soft);
-}
-
-.empty-state-icon {
-  width: 52px;
-  height: 52px;
-  margin-bottom: var(--space-2);
-  color: var(--mint-accent);
-}
-
-.empty-state h3 {
-  font-size: 1.15rem;
-  font-weight: 800;
-  margin-bottom: 6px;
-  color: var(--text);
-}
-
-.empty-state p {
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--muted);
-  font-size: 0.88rem;
-  max-width: 290px;
-  line-height: 1.45;
+  padding: 24px 12px;
+  margin: auto 0;
+  line-height: 1.4;
 }
 
 /* Message Rows */
@@ -609,33 +434,17 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   transition: transform var(--transition-fast);
 }
 
-/* Sent by me */
 .message-row.mine .message-bubble {
   background-color: var(--bubble-mine-bg);
   color: var(--bubble-mine-text);
-  border: 1px solid var(--bubble-mine-border);
   border-bottom-right-radius: 6px;
 }
 
-/* Received from peers */
 .message-row.theirs .message-bubble {
   background-color: var(--bubble-theirs-bg);
   color: var(--bubble-theirs-text);
   border: 1px solid var(--bubble-theirs-border);
   border-bottom-left-radius: 6px;
-}
-
-.sender-name {
-  font-size: 0.74rem;
-  font-weight: 800;
-  color: var(--lilac-accent);
-  margin-bottom: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-[data-theme="light"] .sender-name {
-  color: #6439B8;
 }
 
 .message-content {
@@ -644,69 +453,109 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   line-height: 1.45;
 }
 
-.message-meta {
+/* Incoming message subline: sender, direct/N hops, time */
+.message-meta-sub {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 5px;
-  font-size: 0.7rem;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Outgoing message status line */
+.message-status-line {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.status-failed {
+  color: var(--danger);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.retry-link {
+  background: none;
+  border: none;
+  color: var(--danger);
+  text-decoration: underline;
+  font-weight: 700;
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0 4px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.retry-link:hover {
+  filter: brightness(1.2);
+}
+
+/* Full-width Emergency Broadcast Card */
+.emergency-broadcast-card {
+  width: 100%;
+  border: 2px solid var(--danger);
+  background: rgba(255, 82, 99, 0.14);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  margin: 4px 0;
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(255, 82, 99, 0.15);
+  animation: slideUp var(--transition-normal) forwards;
+}
+
+.emergency-broadcast-header {
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.emergency-broadcast-payload {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #FFFFFF;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.emergency-broadcast-path {
+  font-size: 0.72rem;
+  color: #FCA5A5;
   font-weight: 600;
 }
 
-.message-row.mine .message-meta {
-  justify-content: flex-end;
-  color: var(--bubble-mine-meta);
-}
-
-.message-row.theirs .message-meta {
-  color: var(--bubble-theirs-meta);
-}
-
-.hop-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: var(--radius-chip);
-  font-size: 0.68rem;
+/* Peer drop mid-conversation system line */
+.system-line {
+  text-align: center;
+  font-size: 0.74rem;
   font-weight: 700;
-  margin-top: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-.message-row.mine .hop-chip {
-  background: var(--hop-chip-mine-bg);
-  color: var(--hop-chip-mine-text);
-}
-
-.message-row.theirs .hop-chip {
-  background: var(--hop-chip-theirs-bg);
-  color: var(--hop-chip-theirs-text);
+  color: var(--muted);
+  padding: 6px 14px;
+  margin: 6px auto;
+  background: var(--elevated);
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
-}
-
-.status-icon {
-  width: 14px;
-  height: 14px;
-}
-
-.status-icon.delivered {
-  color: var(--bubble-mine-status);
-}
-
-/* Emergency chat bubble */
-.message-bubble.emergency {
-  background: var(--coral-bg) !important;
-  color: var(--coral-text) !important;
-  border: 1px solid var(--danger) !important;
-}
-
-.message-bubble.emergency .sender-name {
-  color: var(--danger) !important;
+  display: inline-block;
+  align-self: center;
+  animation: slideUp var(--transition-normal) forwards;
 }
 
 /* =========================================================
-   4. Floating Composer Dock (Matching Inspo)
+   4. Recipient Selector Chips & Composer
    ========================================================= */
 .composer-container {
   background-color: var(--composer-bg);
@@ -717,41 +566,70 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   gap: 8px;
   box-shadow: var(--shadow-dock);
   z-index: 30;
-  transition: background-color var(--transition-normal);
+  flex-shrink: 0;
 }
 
-.composer-top {
+/* Recipient Chips in the same row */
+.dest-chips-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  overflow: hidden;
 }
 
-.dest-select-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
+.dest-label {
+  font-size: 0.82rem;
+  font-weight: 700;
   color: var(--muted);
-  font-weight: 600;
+  flex-shrink: 0;
+  padding-left: 2px;
+}
+
+.dest-chips-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
   width: 100%;
 }
 
-.dest-select {
-  flex: 1;
-  background: var(--composer-input-bg);
-  border: 1px solid var(--border);
-  color: var(--text);
+.dest-chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tappable Chips (at least 44px tall) */
+.dest-chip {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
   border-radius: var(--radius-pill);
-  padding: 4px 12px;
-  font-size: 0.8rem;
+  background: var(--elevated);
+  border: 1.5px solid var(--border);
+  color: var(--text);
   font-weight: 700;
+  font-size: 0.84rem;
   cursor: pointer;
-  outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all var(--transition-fast);
 }
 
-.dest-select:focus {
-  border-color: var(--mint-accent);
+.dest-chip:hover {
+  background: var(--elevated-hover);
+}
+
+/* Selected chip gets green outline */
+.dest-chip.active {
+  border: 2px solid var(--mint-accent) !important;
+  background: var(--elevated-hover);
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(72, 155, 85, 0.25);
 }
 
 .composer-row {
@@ -760,55 +638,15 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   gap: 8px;
 }
 
-.message-input {
-  flex: 1;
-  height: 48px;
-  background: var(--composer-input-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  padding: 0 18px;
-  font-size: 0.94rem;
-  font-weight: 500;
-  color: var(--text);
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.message-input:focus {
-  border-color: var(--mint-accent);
-  box-shadow: 0 0 10px rgba(72, 155, 85, 0.2);
-}
-
-.message-input::placeholder {
-  color: var(--muted);
-}
-
-/* Circular Send Button matching inspiration center icon */
-.send-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--composer-send-bg);
-  color: var(--composer-send-text);
-  border: none;
+/* Emergency Column with "Hold" caption */
+.emergency-col {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-  transition: all var(--transition-fast);
+  gap: 2px;
   flex-shrink: 0;
 }
 
-.send-btn:hover {
-  transform: scale(1.06);
-}
-
-.send-btn:active {
-  transform: scale(0.94);
-}
-
-/* SOS Button */
 .emergency-btn-wrapper {
   position: relative;
   width: 48px;
@@ -821,8 +659,8 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 .emergency-btn {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background-color: var(--danger);
   border: none;
@@ -868,8 +706,76 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   transition: stroke-dashoffset 1500ms linear;
 }
 
+.sos-caption {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Message Input */
+.message-input {
+  flex: 1;
+  height: 48px;
+  background: var(--composer-input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 0 18px;
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--text);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.message-input:focus {
+  border-color: var(--mint-accent);
+  box-shadow: 0 0 10px rgba(72, 155, 85, 0.2);
+}
+
+.message-input::placeholder {
+  color: var(--muted);
+}
+
+/* Send Button (Disabled when empty) */
+.send-btn {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 50%;
+  background: var(--composer-send-bg);
+  color: var(--composer-send-text);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.send-btn:not(:disabled):hover {
+  transform: scale(1.06);
+}
+
+.send-btn:not(:disabled):active {
+  transform: scale(0.94);
+}
+
+.send-btn.disabled,
+.send-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
 /* =========================================================
-   5. Bottom Sheet (Mesh Neighbors)
+   5. Bottom Sheet & Overlays
    ========================================================= */
 .bottom-sheet-backdrop {
   position: fixed;
@@ -934,6 +840,26 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   letter-spacing: -0.01em;
 }
 
+.icon-btn {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.icon-btn:hover {
+  background: var(--elevated-hover);
+}
+
 .neighbors-list {
   display: flex;
   flex-direction: column;
@@ -950,11 +876,6 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   background: var(--elevated);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card);
-  transition: background-color var(--transition-fast);
-}
-
-.neighbor-card:hover {
-  background: var(--elevated-hover);
 }
 
 .neighbor-card-left {
@@ -1005,9 +926,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   color: var(--danger);
 }
 
-/* =========================================================
-   6. Incoming Emergency Full-Screen Overlay
-   ========================================================= */
+/* Emergency Full Screen Overlay */
 .emergency-overlay {
   position: fixed;
   inset: 0;
@@ -1086,9 +1005,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   transform: scale(0.96);
 }
 
-/* =========================================================
-   7. Toast Notifications
-   ========================================================= */
+/* Toasts */
 .toast-container {
   position: fixed;
   top: 68px;
@@ -1126,9 +1043,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   border-left: 4px solid var(--danger);
 }
 
-/* =========================================================
-   Animations
-   ========================================================= */
+/* Animations */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }

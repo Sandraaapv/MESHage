@@ -1,6 +1,7 @@
 /**
  * MESHage Phone UI Application
- * Plain Vanilla JavaScript, offline-first, SSE live updates
+ * Offline-first, mobile mesh messenger
+ * Vanilla JavaScript, SSE live stream & local REST API
  */
 
 (function () {
@@ -11,8 +12,11 @@
     nodeName: "Node",
     port: 5000,
     neighbors: [],
-    messages: new Map(), // id -> message
-    theme: localStorage.getItem("meshage_theme") || "dark",
+    messages: new Map(), // id -> message object
+    outgoingStatuses: new Map(), // id -> { status, path, hops, error }
+    peerStatuses: new Map(), // name -> "UP" | "DOWN"
+    peerHops: new Map(), // name -> number
+    selectedDst: "ALL",
     sosTimer: null,
     sosHoldDuration: 1500, // 1.5 seconds
     vibrationInterval: null,
@@ -24,19 +28,17 @@
     nodeNameHeader: document.getElementById("nodeNameHeader"),
     openNeighborsBtn: document.getElementById("openNeighborsBtn"),
     neighborCountText: document.getElementById("neighborCountText"),
-    headerSignalBars: document.getElementById("headerSignalBars"),
-    themeToggleBtn: document.getElementById("themeToggleBtn"),
-    themeIcon: document.getElementById("themeIcon"),
     meshBannerCard: document.getElementById("meshBannerCard"),
     bannerStatusText: document.getElementById("bannerStatusText"),
     bannerRouteTag: document.getElementById("bannerRouteTag"),
     bannerTitle: document.getElementById("bannerTitle"),
     bannerSubtitle: document.getElementById("bannerSubtitle"),
-    bannerAvatars: document.getElementById("bannerAvatars"),
-    bannerActionBtn: document.getElementById("bannerActionBtn"),
+    bannerPeersRow: document.getElementById("bannerPeersRow"),
+    bannerHint: document.getElementById("bannerHint"),
     chatContainer: document.getElementById("chatContainer"),
-    emptyState: document.getElementById("emptyState"),
-    destSelect: document.getElementById("destSelect"),
+    emptyHint: document.getElementById("emptyHint"),
+    destChipsContainer: document.getElementById("destChipsContainer"),
+    destChipsScroll: document.getElementById("destChipsScroll"),
     messageInput: document.getElementById("messageInput"),
     sendBtn: document.getElementById("sendBtn"),
     sosWrapper: document.getElementById("sosWrapper"),
@@ -54,30 +56,10 @@
 
   // SVG Icons
   const icons = {
-    moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>',
-    sun: '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>',
     checkSingle: '<polyline points="20 6 9 17 4 12"></polyline>',
     checkDouble: '<path d="M18 6L7 17l-5-5"></path><path d="M22 10l-7.5 7.5-1.5-1.5"></path>',
     hop: '<polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline>',
   };
-
-  // =========================================================
-  // Theme Management
-  // =========================================================
-  function applyTheme(theme) {
-    state.theme = theme;
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("meshage_theme", theme);
-    els.themeIcon.innerHTML = theme === "dark" ? icons.moon : icons.sun;
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", theme === "dark" ? "#0F1013" : "#E8EFE6");
-    }
-  }
-
-  function toggleTheme() {
-    applyTheme(state.theme === "dark" ? "light" : "dark");
-  }
 
   // =========================================================
   // API Fetching & State
@@ -90,9 +72,15 @@
 
       state.nodeName = data.node_name || "Node";
       state.port = data.port || 5000;
+      const previousNeighbors = state.neighbors || [];
       state.neighbors = data.neighbors || [];
 
+      // Check for peer status transitions (e.g. peer dropped mid-conversation)
+      checkPeerTransitions(previousNeighbors, state.neighbors);
+
       updateHeader();
+      updateBanner();
+      updateRecipientChips();
       updateNeighborsUI();
     } catch (err) {
       console.warn("Error fetching state:", err);
@@ -106,6 +94,22 @@
       const messages = await res.json();
       messages.forEach((m) => {
         state.messages.set(m.id, m);
+
+        // Learn peer hops from incoming message paths
+        if (m.path && Array.isArray(m.path) && m.src && m.src !== state.nodeName) {
+          const hops = Math.max(1, m.path.length - 1);
+          state.peerHops.set(m.src, hops);
+        }
+
+        // If outgoing message from this node, mark delivered if delivered locally/sent
+        if (m.src === state.nodeName && !state.outgoingStatuses.has(m.id)) {
+          const hops = m.path ? Math.max(1, m.path.length - 1) : 1;
+          state.outgoingStatuses.set(m.id, {
+            status: "delivered",
+            path: m.path || [state.nodeName],
+            hops: hops,
+          });
+        }
       });
       renderAllMessages();
     } catch (err) {
@@ -113,158 +117,185 @@
     }
   }
 
+  // =========================================================
+  // Peer Transitions (System Line on Peer Drop)
+  // =========================================================
+  function checkPeerTransitions(oldNeighbors, newNeighbors) {
+    const oldMap = new Map();
+    oldNeighbors.forEach((n) => oldMap.set(n.name, n.status));
+
+    newNeighbors.forEach((n) => {
+      const prevStatus = state.peerStatuses.get(n.name) || oldMap.get(n.name);
+      if (prevStatus === "UP" && n.status === "DOWN") {
+        appendSystemLine(`${n.name} went offline, rerouting`);
+      }
+      state.peerStatuses.set(n.name, n.status);
+
+      // Default direct neighbors to 1 hop if UP
+      if (n.status === "UP" && !state.peerHops.has(n.name)) {
+        state.peerHops.set(n.name, 1);
+      }
+    });
+  }
+
+  function appendSystemLine(text) {
+    const line = document.createElement("div");
+    line.className = "system-line";
+    line.textContent = text;
+    els.chatContainer.appendChild(line);
+    scrollToBottom();
+  }
+
+  // =========================================================
+  // 1. Header & Live Peer Count
+  // =========================================================
   function updateHeader() {
     els.nodeNameHeader.textContent = `MESHage (${state.nodeName})`;
     const upNeighbors = state.neighbors.filter((n) => n.status === "UP");
-    els.neighborCountText.textContent = upNeighbors.length;
-
-    // update signal bars
-    const bars = els.headerSignalBars.children;
-    for (let i = 0; i < bars.length; i++) {
-      if (upNeighbors.length > 0 && i < Math.min(upNeighbors.length, 3)) {
-        bars[i].classList.add("active");
-      } else {
-        bars[i].classList.remove("active");
-      }
-    }
-
-    // update destination dropdown options
-    updateDestDropdown();
-
-    // update the inspiration-style feature banner card
-    updateBanner();
+    const count = upNeighbors.length;
+    els.neighborCountText.textContent = `${count} ${count === 1 ? "peer" : "peers"}`;
   }
 
+  // =========================================================
+  // 2. Compact Mint Node Card & Peer Circles
+  // =========================================================
   function updateBanner() {
     if (!els.bannerTitle) return;
-    const upNeighbors = state.neighbors.filter((n) => n.status === "UP");
-    els.bannerTitle.textContent = `Node ${state.nodeName} Mesh Radio`;
-    
-    if (upNeighbors.length > 0) {
-      els.bannerStatusText.textContent = `${upNeighbors.length} ${upNeighbors.length === 1 ? "Peer" : "Peers"} Active`;
-      els.bannerSubtitle.textContent = "Offline P2P Multi-Hop • AES-256 Encrypted";
-      if (els.bannerRouteTag) {
-        els.bannerRouteTag.textContent = `${upNeighbors.length} Linked`;
-      }
-    } else {
-      els.bannerStatusText.textContent = "Scanning...";
-      els.bannerSubtitle.textContent = "Looking for peers on Wi-Fi UDP port 5001";
-      if (els.bannerRouteTag) {
-        els.bannerRouteTag.textContent = "Ready";
-      }
-    }
+    els.bannerTitle.textContent = `Node ${state.nodeName}`;
+    els.bannerStatusText.textContent = "Mesh online";
+    els.bannerRouteTag.textContent = "Ready";
+    els.bannerSubtitle.textContent = "Wi-Fi UDP port 5001 \u2022 AES-256 encrypted";
 
-    // Avatars row matching Inspiration
-    const ringClasses = ["ring-mint", "ring-lilac", "ring-butter", "ring-coral"];
-    let avatarsHtml = `
-      <div class="banner-avatar-item is-you" title="Your Node (${state.nodeName})">
-        <div class="avatar-ring-wrapper ring-mint">
-          <div class="avatar-circle">
-            <span>${escapeHtml(state.nodeName.slice(0, 2).toUpperCase())}</span>
-          </div>
+    // Gather unique known peers
+    const knownPeers = new Map();
+
+    state.neighbors.forEach((n) => {
+      knownPeers.set(n.name, {
+        name: n.name,
+        status: n.status,
+        hops: state.peerHops.get(n.name) || 1,
+      });
+    });
+
+    // Also include any peers seen from message history
+    state.peerHops.forEach((hops, name) => {
+      if (name !== state.nodeName && !knownPeers.has(name)) {
+        knownPeers.set(name, {
+          name: name,
+          status: state.peerStatuses.get(name) || "UP",
+          hops: hops,
+        });
+      }
+    });
+
+    let html = `
+      <div class="banner-peer-item" title="Your Node (${state.nodeName})">
+        <div class="banner-peer-circle is-you">
+          <span>${escapeHtml(state.nodeName.slice(0, 2).toUpperCase())}</span>
         </div>
-        <span class="avatar-label">You</span>
+        <span class="banner-peer-label">You</span>
       </div>
     `;
 
-    upNeighbors.forEach((n, idx) => {
-      const ringClass = ringClasses[(idx + 1) % ringClasses.length];
-      avatarsHtml += `
-        <div class="banner-avatar-item is-peer" data-name="${escapeHtml(n.name)}" title="Select Node ${escapeHtml(n.name)}">
-          <div class="avatar-ring-wrapper ${ringClass}">
-            <div class="avatar-circle">
-              <span>${escapeHtml(n.name.slice(0, 2).toUpperCase())}</span>
+    if (knownPeers.size === 0) {
+      els.bannerHint.style.display = "block";
+    } else {
+      els.bannerHint.style.display = "none";
+
+      knownPeers.forEach((p) => {
+        const isUp = p.status === "UP";
+        const circleClass = isUp ? "is-peer" : "is-offline";
+        const hopText = isUp ? `${p.hops} ${p.hops === 1 ? "hop" : "hops"}` : "Offline";
+
+        html += `
+          <div class="banner-peer-item" data-peer="${escapeHtml(p.name)}" title="Select Node ${escapeHtml(p.name)}">
+            <div class="banner-peer-circle ${circleClass}">
+              <span>${escapeHtml(p.name.slice(0, 2).toUpperCase())}</span>
             </div>
+            <span class="banner-peer-label">${hopText}</span>
           </div>
-          <span class="avatar-label">Node ${escapeHtml(n.name)}</span>
-        </div>
-      `;
-    });
+        `;
+      });
+    }
 
-    els.bannerAvatars.innerHTML = avatarsHtml;
+    els.bannerPeersRow.innerHTML = html;
 
-    // Quick tap on avatar to select recipient
-    els.bannerAvatars.querySelectorAll(".banner-avatar-item.is-peer").forEach((item) => {
+    // Tapping peer circle selects that peer
+    els.bannerPeersRow.querySelectorAll(".banner-peer-item[data-peer]").forEach((item) => {
       item.addEventListener("click", () => {
-        const target = item.getAttribute("data-name");
-        if (target && els.destSelect) {
-          els.destSelect.value = target;
-          els.messageInput.focus();
-          showToast(`Target set to Node ${target}`, "info");
-        }
+        const peer = item.getAttribute("data-peer");
+        if (peer) selectRecipient(peer);
       });
     });
   }
 
-  function updateDestDropdown() {
-    const currentVal = els.destSelect.value;
-    const upNeighbors = state.neighbors.filter((n) => n.status === "UP");
-
-    let html = '<option value="ALL">Everyone (Broadcast)</option>';
-    upNeighbors.forEach((n) => {
-      html += `<option value="${n.name}">Node ${n.name}</option>`;
+  // =========================================================
+  // 5. Recipient Selector Chips
+  // =========================================================
+  function updateRecipientChips() {
+    const knownPeers = new Set();
+    state.neighbors.forEach((n) => knownPeers.add(n.name));
+    state.peerHops.forEach((_, name) => {
+      if (name !== state.nodeName) knownPeers.add(name);
     });
 
-    els.destSelect.innerHTML = html;
-    if (currentVal && els.destSelect.querySelector(`option[value="${currentVal}"]`)) {
-      els.destSelect.value = currentVal;
-    }
-  }
+    let html = `
+      <button type="button" class="dest-chip ${state.selectedDst === "ALL" ? "active" : ""}" data-dst="ALL">
+        Everyone
+      </button>
+    `;
 
-  function updateNeighborsUI() {
-    if (!state.neighbors || state.neighbors.length === 0) {
-      els.neighborsList.innerHTML = '<p style="color:var(--muted); text-align:center; padding:16px;">No neighbors in radio range yet.</p>';
-      return;
-    }
-
-    const ringClasses = ["ring-mint", "ring-lilac", "ring-butter", "ring-coral"];
-    let html = "";
-    state.neighbors.forEach((n, idx) => {
-      const isUp = n.status === "UP";
-      const statusClass = isUp ? "up" : "down";
-      const statusText = isUp ? "Connected" : "Disconnected";
-      const lastSeen = n.last_seen_seconds ? `${n.last_seen_seconds}s ago` : "just now";
-      const ringClass = isUp ? ringClasses[(idx + 1) % ringClasses.length] : "ring-muted";
-
+    Array.from(knownPeers).sort().forEach((name) => {
+      const isActive = state.selectedDst === name;
       html += `
-        <div class="neighbor-card">
-          <div class="neighbor-card-left">
-            <div class="avatar-ring-wrapper ${ringClass} small">
-              <div class="avatar-circle">
-                <span>${escapeHtml(n.name.slice(0, 2).toUpperCase())}</span>
-              </div>
-            </div>
-            <div class="neighbor-card-info">
-              <span class="neighbor-card-name">Node ${escapeHtml(n.name)}</span>
-              <span class="neighbor-card-addr">${escapeHtml(n.address || "local link")} &bull; ${lastSeen}</span>
-            </div>
-          </div>
-          <div class="neighbor-card-right">
-            <span class="status-badge ${statusClass}">${statusText}</span>
-          </div>
-        </div>
+        <button type="button" class="dest-chip ${isActive ? "active" : ""}" data-dst="${escapeHtml(name)}">
+          Node ${escapeHtml(name)}
+        </button>
       `;
     });
 
-    els.neighborsList.innerHTML = html;
+    els.destChipsScroll.innerHTML = html;
+
+    // Attach click events to chips
+    els.destChipsScroll.querySelectorAll(".dest-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const dst = chip.getAttribute("data-dst");
+        if (dst) selectRecipient(dst);
+      });
+    });
+  }
+
+  function selectRecipient(dst) {
+    state.selectedDst = dst;
+    els.destChipsScroll.querySelectorAll(".dest-chip").forEach((chip) => {
+      if (chip.getAttribute("data-dst") === dst) {
+        chip.classList.add("active");
+        chip.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      } else {
+        chip.classList.remove("active");
+      }
+    });
+    els.messageInput.focus();
   }
 
   // =========================================================
-  // Chat Rendering
+  // 3 & 4. Chat Rendering & Messages
   // =========================================================
   function renderAllMessages() {
     if (state.messages.size === 0) {
-      els.emptyState.style.display = "flex";
+      els.emptyHint.style.display = "block";
       return;
     }
 
-    els.emptyState.style.display = "none";
+    els.emptyHint.style.display = "none";
     const existingIds = new Set();
-    document.querySelectorAll(".message-row[data-id]").forEach((el) => {
+    document.querySelectorAll(".message-row[data-id], .emergency-broadcast-card[data-id]").forEach((el) => {
       existingIds.add(el.getAttribute("data-id"));
     });
 
-    const sorted = Array.from(state.messages.values()).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    const sorted = Array.from(state.messages.values()).sort(
+      (a, b) => (a.timestamp || 0) - (b.timestamp || 0)
+    );
 
     sorted.forEach((msg) => {
       if (!existingIds.has(msg.id)) {
@@ -276,46 +307,148 @@
   }
 
   function appendMessageElement(msg, autoScroll = true) {
-    els.emptyState.style.display = "none";
+    els.emptyHint.style.display = "none";
 
     const isMine = msg.src === state.nodeName;
     const isEmergency = msg.type === "emergency";
+    const d = msg.timestamp ? new Date(msg.timestamp * 1000) : new Date();
+    const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    // Path calculation
+    const path = msg.path && msg.path.length > 0 ? msg.path : [msg.src];
+    const hops = Math.max(1, path.length - 1);
+    const pathStr = path.join(" > ");
+    const hopText = hops <= 1 ? "direct" : `${hops} hops`;
+
+    // 1. Incoming Emergency Broadcast: Full-width coral-outlined card
+    if (isEmergency && !isMine) {
+      const card = document.createElement("div");
+      card.className = "emergency-broadcast-card";
+      card.setAttribute("data-id", msg.id);
+      card.innerHTML = `
+        <div class="emergency-broadcast-header">EMERGENCY \u2022 FROM NODE ${escapeHtml(msg.src)}</div>
+        <div class="emergency-broadcast-payload">${escapeHtml(msg.payload || "")}</div>
+        <div class="emergency-broadcast-path">Relay path: ${escapeHtml(pathStr)} \u2022 ${hopText} \u2022 ${timeStr}</div>
+      `;
+      els.chatContainer.appendChild(card);
+      if (autoScroll) scrollToBottom();
+      return;
+    }
+
+    // 2. Chat Message Row
     const row = document.createElement("div");
     row.className = `message-row ${isMine ? "mine" : "theirs"}`;
     row.setAttribute("data-id", msg.id);
 
-    // time format
-    const d = msg.timestamp ? new Date(msg.timestamp * 1000) : new Date();
-    const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (isMine) {
+      // Outgoing message status
+      const outStatus = state.outgoingStatuses.get(msg.id) || { status: "delivered", path: path, hops: hops };
+      const statusHtml = renderOutgoingStatusHtml(msg, outStatus, timeStr);
 
-    // hop path display
-    const pathStr = (msg.path && msg.path.length > 0) ? msg.path.join(" > ") : (isMine ? state.nodeName : msg.src);
-
-    const bubbleClass = `message-bubble ${isEmergency ? "emergency" : ""}`;
-    const senderHtml = (!isMine) ? `<div class="sender-name">${isEmergency ? "EMERGENCY: " : ""}Node ${msg.src}</div>` : "";
-
-    const statusIconSvg = isMine
-      ? `<svg class="status-icon delivered" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${icons.checkDouble}</svg>`
-      : "";
-
-    row.innerHTML = `
-      <div class="${bubbleClass}">
-        ${senderHtml}
-        <div class="message-content">${escapeHtml(msg.payload || "")}</div>
-        <div class="message-meta">
-          <span>${timeStr}</span>
-          ${statusIconSvg}
+      row.innerHTML = `
+        <div class="message-bubble ${isEmergency ? "emergency" : ""}">
+          <div class="message-content">${escapeHtml(msg.payload || "")}</div>
         </div>
-      </div>
-      <div class="hop-chip">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${icons.hop}</svg>
-        <span>${escapeHtml(pathStr)}</span>
-      </div>
-    `;
+        <div class="message-status-line" id="status-${escapeHtml(msg.id)}">
+          ${statusHtml}
+        </div>
+      `;
+    } else {
+      // Incoming message
+      row.innerHTML = `
+        <div class="message-bubble ${isEmergency ? "emergency" : ""}">
+          <div class="message-content">${escapeHtml(msg.payload || "")}</div>
+        </div>
+        <div class="message-meta-sub">
+          <span>Node ${escapeHtml(msg.src)}</span>
+          <span>\u2022</span>
+          <span>${hopText}</span>
+          <span>\u2022</span>
+          <span>${timeStr}</span>
+        </div>
+      `;
+    }
 
     els.chatContainer.appendChild(row);
-    if (autoScroll) {
-      scrollToBottom();
+    attachRetryListeners(row);
+
+    if (autoScroll) scrollToBottom();
+  }
+
+  function renderOutgoingStatusHtml(msg, outStatus, timeStr) {
+    if (outStatus.status === "sending") {
+      return `<span>Sending...</span>`;
+    } else if (outStatus.status === "failed") {
+      return `
+        <span class="status-failed">
+          Failed \u2022
+          <button type="button" class="retry-link" data-retry-id="${escapeHtml(msg.id)}">Tap to retry</button>
+        </span>
+      `;
+    } else if (outStatus.status === "relayed") {
+      return `<span>Relayed \u2022 ${timeStr}</span>`;
+    } else {
+      // Delivered
+      if (msg.dst === "ALL") {
+        return `<span>Broadcast sent \u2022 ${timeStr}</span>`;
+      } else if (outStatus.hops <= 1) {
+        return `<span>Delivered to ${escapeHtml(msg.dst)} \u2022 direct \u2022 ${timeStr}</span>`;
+      } else {
+        const pathStr = outStatus.path ? outStatus.path.join(" > ") : `${state.nodeName} > ${msg.dst}`;
+        return `<span>Delivered to ${escapeHtml(msg.dst)} \u2022 via ${escapeHtml(pathStr)} \u2022 ${outStatus.hops} hops \u2022 ${timeStr}</span>`;
+      }
+    }
+  }
+
+  function attachRetryListeners(container) {
+    container.querySelectorAll(".retry-link").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const msgId = btn.getAttribute("data-retry-id");
+        if (msgId) retryMessage(msgId);
+      });
+    });
+  }
+
+  function updateMessageStatusUI(msgId) {
+    const statusEl = document.getElementById(`status-${msgId}`);
+    const msg = state.messages.get(msgId);
+    const outStatus = state.outgoingStatuses.get(msgId);
+    if (statusEl && msg && outStatus) {
+      const d = msg.timestamp ? new Date(msg.timestamp * 1000) : new Date();
+      const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      statusEl.innerHTML = renderOutgoingStatusHtml(msg, outStatus, timeStr);
+      attachRetryListeners(statusEl);
+    }
+  }
+
+  async function retryMessage(msgId) {
+    const msg = state.messages.get(msgId);
+    if (!msg) return;
+
+    state.outgoingStatuses.set(msgId, { status: "sending", path: [state.nodeName], hops: 1 });
+    updateMessageStatusUI(msgId);
+
+    try {
+      const res = await fetch("/api/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dst: msg.dst, payload: msg.payload }),
+      });
+
+      if (!res.ok) throw new Error("Retry failed");
+      const data = await res.json();
+
+      const hops = data.path ? Math.max(1, data.path.length - 1) : 1;
+      state.outgoingStatuses.set(msgId, {
+        status: "delivered",
+        path: data.path || [state.nodeName, msg.dst],
+        hops: hops,
+      });
+      updateMessageStatusUI(msgId);
+    } catch (err) {
+      state.outgoingStatuses.set(msgId, { status: "failed", error: err.message });
+      updateMessageStatusUI(msgId);
     }
   }
 
@@ -335,14 +468,41 @@
   }
 
   // =========================================================
-  // Sending Messages
+  // Sending Messages & Send Button State
   // =========================================================
+  function updateSendButtonState() {
+    const hasText = els.messageInput.value.trim().length > 0;
+    els.sendBtn.disabled = !hasText;
+    if (hasText) {
+      els.sendBtn.classList.remove("disabled");
+    } else {
+      els.sendBtn.classList.add("disabled");
+    }
+  }
+
   async function sendMessage() {
     const text = els.messageInput.value.trim();
     if (!text) return;
 
-    const dst = els.destSelect.value || "ALL";
+    const dst = state.selectedDst || "ALL";
     els.messageInput.value = "";
+    updateSendButtonState();
+
+    const tempId = `msg-${Date.now()}`;
+    const msgObj = {
+      id: tempId,
+      src: state.nodeName,
+      dst: dst,
+      payload: text,
+      path: [state.nodeName],
+      timestamp: Date.now() / 1000,
+      type: "chat",
+    };
+
+    // Optimistically record as sending
+    state.messages.set(tempId, msgObj);
+    state.outgoingStatuses.set(tempId, { status: "sending", path: [state.nodeName], hops: 1 });
+    appendMessageElement(msgObj, true);
 
     try {
       const res = await fetch("/api/send", {
@@ -354,30 +514,45 @@
       if (!res.ok) throw new Error("Failed to send");
       const data = await res.json();
 
-      // create optimistic local message
-      const msgObj = {
-        id: data.id || `local-${Date.now()}`,
-        src: state.nodeName,
-        dst: dst,
-        payload: text,
-        path: [state.nodeName],
-        timestamp: Date.now() / 1000,
-        type: "chat",
-      };
+      const serverId = data.id || tempId;
+      if (serverId !== tempId) {
+        state.messages.delete(tempId);
+        msgObj.id = serverId;
+        state.messages.set(serverId, msgObj);
+        state.outgoingStatuses.delete(tempId);
+      }
 
-      state.messages.set(msgObj.id, msgObj);
-      appendMessageElement(msgObj, true);
+      // Check if direct or multi-hop path
+      const hops = state.peerHops.get(dst) || 1;
+      const path = [state.nodeName];
+      if (hops > 1) path.push("relay");
+      path.push(dst);
+
+      state.outgoingStatuses.set(msgObj.id, {
+        status: "delivered",
+        path: path,
+        hops: hops,
+      });
+      updateMessageStatusUI(msgObj.id);
     } catch (err) {
-      showToast("Failed to send message: " + err.message, "down");
+      state.outgoingStatuses.set(msgObj.id, { status: "failed", error: err.message });
+      updateMessageStatusUI(msgObj.id);
     }
   }
 
   // =========================================================
-  // Emergency SOS Trigger (1.5s press-and-hold)
+  // 6. SOS Button (1.5s press-and-hold, haptics, hold caption)
   // =========================================================
   function startSosHold(e) {
     if (e.cancelable) e.preventDefault();
     els.sosWrapper.classList.add("holding");
+
+    // gentle vibration pulse on hold start
+    if ("vibrate" in navigator) {
+      try {
+        navigator.vibrate([40, 60, 40, 60]);
+      } catch (_) {}
+    }
 
     state.sosTimer = setTimeout(() => {
       triggerEmergencyAlert();
@@ -394,9 +569,11 @@
   }
 
   async function triggerEmergencyAlert() {
-    // vibrate on send if supported
+    // Distinct haptic vibration on completion
     if ("vibrate" in navigator) {
-      navigator.vibrate([200, 100, 200, 100, 400]);
+      try {
+        navigator.vibrate([200, 100, 200]);
+      } catch (_) {}
     }
 
     try {
@@ -421,50 +598,90 @@
       };
 
       state.messages.set(alertMsg.id, alertMsg);
+      state.outgoingStatuses.set(alertMsg.id, { status: "delivered", path: [state.nodeName], hops: 1 });
       appendMessageElement(alertMsg, true);
-      showToast("Emergency Alert Broadcast Sent!", "down");
+
+      showToast("SOS broadcast sent", "down");
     } catch (err) {
-      showToast("Emergency broadcast failed: " + err.message, "down");
+      showToast("SOS broadcast failed: " + err.message, "down");
     }
   }
 
   // =========================================================
-  // Incoming Emergency Overlay
+  // Incoming Emergency Full-Screen Overlay
   // =========================================================
   function showIncomingEmergency(msg) {
     els.emergencySender.textContent = `Alert from Node ${msg.src}`;
     els.emergencyPayload.textContent = msg.payload || "Emergency Alert Broadcast";
-    const pathStr = (msg.path && msg.path.length > 0) ? msg.path.join(" > ") : msg.src;
+    const pathStr = msg.path && msg.path.length > 0 ? msg.path.join(" > ") : msg.src;
     els.emergencyMeta.textContent = `Path: ${pathStr} \u2022 Hop count: ${Math.max(1, (msg.path || []).length - 1)}`;
 
     els.emergencyOverlay.classList.add("active");
 
-    // trigger continuous phone vibration
     if ("vibrate" in navigator) {
-      navigator.vibrate([300, 150, 300, 150, 500]);
-      if (!state.vibrationInterval) {
-        state.vibrationInterval = setInterval(() => {
-          if (els.emergencyOverlay.classList.contains("active")) {
-            navigator.vibrate([300, 150, 300, 150, 500]);
-          } else {
-            clearInterval(state.vibrationInterval);
-            state.vibrationInterval = null;
-          }
-        }, 1500);
-      }
+      try {
+        navigator.vibrate([300, 150, 300, 150, 500]);
+        if (!state.vibrationInterval) {
+          state.vibrationInterval = setInterval(() => {
+            if (els.emergencyOverlay.classList.contains("active")) {
+              navigator.vibrate([300, 150, 300, 150, 500]);
+            } else {
+              clearInterval(state.vibrationInterval);
+              state.vibrationInterval = null;
+            }
+          }, 1500);
+        }
+      } catch (_) {}
     }
   }
 
   function acknowledgeEmergency() {
     els.emergencyOverlay.classList.remove("active");
     if ("vibrate" in navigator) {
-      navigator.vibrate(0);
+      try {
+        navigator.vibrate(0);
+      } catch (_) {}
     }
     if (state.vibrationInterval) {
       clearInterval(state.vibrationInterval);
       state.vibrationInterval = null;
     }
     showToast("Emergency acknowledged", "up");
+  }
+
+  // =========================================================
+  // Bottom Sheet (Neighbors List)
+  // =========================================================
+  function updateNeighborsUI() {
+    if (!state.neighbors || state.neighbors.length === 0) {
+      els.neighborsList.innerHTML =
+        '<p style="color:var(--muted); text-align:center; padding:16px;">Scanning for mesh neighbors...</p>';
+      return;
+    }
+
+    let html = "";
+    state.neighbors.forEach((n) => {
+      const isUp = n.status === "UP";
+      const statusClass = isUp ? "up" : "down";
+      const statusText = isUp ? "Connected" : "Disconnected";
+      const lastSeen = n.last_seen_seconds ? `${n.last_seen_seconds}s ago` : "just now";
+
+      html += `
+        <div class="neighbor-card">
+          <div class="neighbor-card-left">
+            <div class="neighbor-card-info">
+              <span class="neighbor-card-name">Node ${escapeHtml(n.name)}</span>
+              <span class="neighbor-card-addr">${escapeHtml(n.address || "local link")} \u2022 ${lastSeen}</span>
+            </div>
+          </div>
+          <div class="neighbor-card-right">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    els.neighborsList.innerHTML = html;
   }
 
   // =========================================================
@@ -483,7 +700,7 @@
       setTimeout(() => {
         if (toast.parentElement) toast.parentElement.removeChild(toast);
       }, 200);
-    }, 3200);
+    }, 3000);
   }
 
   // =========================================================
@@ -513,7 +730,6 @@
       evtSource.onerror = function () {
         els.connectionDot.classList.add("disconnected");
         els.connectionDot.title = "Disconnected from mesh node (reconnecting...)";
-        // EventSource will automatically retry connecting
       };
     } catch (err) {
       console.warn("SSE Connection error:", err);
@@ -525,10 +741,17 @@
     const data = event.data || {};
 
     if (type === "neighbor_up") {
+      state.peerStatuses.set(data.name, "UP");
+      state.peerHops.set(data.name, 1);
       showToast(`Neighbor ${data.name || "node"} connected (UP)`, "up");
       fetchState();
     } else if (type === "neighbor_down") {
-      showToast(`Neighbor ${data.name || "node"} disconnected (DOWN)`, "down");
+      const name = data.name || "Peer";
+      if (state.peerStatuses.get(name) === "UP") {
+        appendSystemLine(`${name} went offline, rerouting`);
+      }
+      state.peerStatuses.set(name, "DOWN");
+      showToast(`Neighbor ${name} disconnected (DOWN)`, "down");
       fetchState();
     } else if (type === "delivered") {
       const msgId = data.id;
@@ -542,10 +765,17 @@
           timestamp: event.timestamp || Date.now() / 1000,
           type: "chat",
         };
+
+        if (data.src && msgObj.path) {
+          state.peerHops.set(data.src, Math.max(1, msgObj.path.length - 1));
+          state.peerStatuses.set(data.src, "UP");
+          updateBanner();
+          updateRecipientChips();
+        }
+
         state.messages.set(msgId, msgObj);
         appendMessageElement(msgObj, true);
 
-        // check if emergency
         if (event.description && event.description.toLowerCase().includes("emergency")) {
           msgObj.type = "emergency";
           showIncomingEmergency(msgObj);
@@ -558,21 +788,22 @@
   // Event Listeners Initialization
   // =========================================================
   function initListeners() {
-    // Theme toggle
-    els.themeToggleBtn.addEventListener("click", toggleTheme);
-
     // Send button & enter key
     els.sendBtn.addEventListener("click", sendMessage);
     els.messageInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
+      if (e.key === "Enter" && !els.sendBtn.disabled) {
         sendMessage();
       }
     });
 
-    // Emergency button press-and-hold (pointer & touch)
+    // Update send button disabled state on input
+    els.messageInput.addEventListener("input", updateSendButtonState);
+
+    // Emergency button: 1.5s hold only, never trigger on single tap
     els.sosBtn.addEventListener("pointerdown", startSosHold);
     window.addEventListener("pointerup", endSosHold);
     window.addEventListener("pointercancel", endSosHold);
+    els.sosBtn.addEventListener("click", (e) => e.preventDefault());
 
     // Acknowledge emergency
     els.ackEmergencyBtn.addEventListener("click", acknowledgeEmergency);
@@ -584,9 +815,6 @@
     };
 
     els.openNeighborsBtn.addEventListener("click", openSheet);
-    if (els.bannerActionBtn) {
-      els.bannerActionBtn.addEventListener("click", openSheet);
-    }
 
     els.closeNeighborsBtn.addEventListener("click", () => {
       els.bottomSheetBackdrop.classList.remove("open");
@@ -598,22 +826,21 @@
       }
     });
 
-    // periodic background state refresh (every 5 seconds)
-    setInterval(fetchState, 5000);
+    // periodic background state refresh (every 4 seconds)
+    setInterval(fetchState, 4000);
   }
 
   // =========================================================
   // App Boot
   // =========================================================
   function boot() {
-    applyTheme(state.theme);
     initListeners();
+    updateSendButtonState();
     fetchState();
     fetchMessages();
     connectSSE();
   }
 
-  // Start app when DOM is ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {
