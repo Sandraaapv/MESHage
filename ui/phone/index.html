@@ -4,9 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="MESHage - Offline Short Range Wireless Mesh Messenger">
-  <meta name="theme-color" content="#0B1220">
+  <meta name="theme-color" content="#0F1013">
   <link rel="manifest" href="manifest.json">
   <title>MESHage - Offline Mesh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -30,7 +33,7 @@
         </button>
 
         <!-- Theme toggle -->
-        <button class="icon-btn" id="themeToggleBtn" aria-label="Toggle light/dark theme">
+        <button class="icon-btn" id="themeToggleBtn" aria-label="Toggle light/dark theme" title="Toggle theme">
           <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <!-- Moon icon (for dark mode) -->
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -38,6 +41,30 @@
         </button>
       </div>
     </header>
+
+    <!-- Mesh Feature Banner Card (Inspiration Style) -->
+    <section class="mesh-banner-card" id="meshBannerCard">
+      <div class="banner-top">
+        <div class="banner-badge">
+          <span class="live-dot"></span>
+          <span id="bannerStatusText">Live Mesh</span>
+        </div>
+        <div class="banner-route-tag" id="bannerRouteTag">P2P Multi-Hop</div>
+      </div>
+      <h2 class="banner-title" id="bannerTitle">Mesh Radio Link</h2>
+      <p class="banner-subtitle" id="bannerSubtitle">Offline &bull; AES-256 Authenticated</p>
+      
+      <!-- Avatars Row with pastel rings (Matching Inspo) -->
+      <div class="banner-avatars-row">
+        <div class="banner-avatars" id="bannerAvatars">
+          <!-- Populated dynamically by JS -->
+        </div>
+        <button class="banner-action-btn" id="bannerActionBtn" aria-label="Open peers list">
+          <span>Peers</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </section>
 
     <!-- Chat Messages Container -->
     <main class="chat-container" id="chatContainer" role="log" aria-live="polite">

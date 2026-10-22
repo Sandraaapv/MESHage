@@ -1,56 +1,160 @@
 /* =========================================================
    MESHage Phone UI Stylesheet
-   Offline, Mobile-first, Dark Theme by default
+   Modern Mobile Design inspired by high-end dark & light modes
+   Soft Pastel Accents: Sage Mint, Lilac Lavender, Soft Butter Honey
    ========================================================= */
 
 :root {
-  --bg: #0B1220;
-  --surface: #121A2E;
-  --elevated: #1A2540;
-  --text: #E8ECF6;
-  --muted: #8A94AD;
-  --accent: #2DD4BF;
-  --accent-glow: rgba(45, 212, 191, 0.25);
-  --success: #34D399;
-  --warning: #FFB020;
-  --danger: #FF4D5E;
-  --danger-glow: rgba(255, 77, 94, 0.35);
+  /* Fonts */
+  --font-display: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-system: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
+  /* Spacing & Radii */
   --space-1: 8px;
-  --space-2: 16px;
-  --space-3: 24px;
-  --space-4: 32px;
+  --space-2: 14px;
+  --space-3: 20px;
+  --space-4: 28px;
 
-  --radius-card: 16px;
-  --radius-bubble: 16px;
+  --radius-card: 24px;
+  --radius-banner: 26px;
+  --radius-bubble: 22px;
   --radius-chip: 20px;
-  --radius-button: 12px;
+  --radius-pill: 9999px;
+  --radius-button: 16px;
 
-  --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.25);
-  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-normal: 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-bounce: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  /* DARK THEME (Default) */
+  --bg: #0E0F12;
+  --surface: #17181D;
+  --elevated: #202229;
+  --elevated-hover: #292B34;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-active: rgba(255, 255, 255, 0.18);
+
+  --text: #FFFFFF;
+  --text-secondary: #DCE0E8;
+  --muted: #8E929F;
+  --muted-subtle: #5C606D;
+
+  /* Inspo Pastel Accents */
+  --mint-bg: #D4ECD7;
+  --mint-text: #132D18;
+  --mint-border: #9DD0A4;
+  --mint-accent: #489B55;
+
+  --lilac-bg: #D6C7F7;
+  --lilac-text: #2A174E;
+  --lilac-border: #AB94E8;
+  --lilac-accent: #8E6CEB;
+
+  --butter-bg: #FEE7B8;
+  --butter-text: #3E2B06;
+  --butter-border: #E8C174;
+  --butter-accent: #E09F24;
+
+  --coral-bg: #FFD4D7;
+  --coral-text: #541117;
+  --danger: #FF5263;
+  --danger-glow: rgba(255, 82, 99, 0.35);
+
+  --success: #34D399;
+  --warning: #FBBF24;
+
+  /* Card and Component-specific in Dark Mode */
+  --banner-bg: var(--mint-bg);
+  --banner-text: var(--mint-text);
+  --banner-subtext: #2B4E32;
+  --banner-badge-bg: #FFFFFF;
+  --banner-badge-text: #132D18;
+  --banner-btn-bg: #14161C;
+  --banner-btn-text: #FFFFFF;
+
+  --bubble-mine-bg: var(--mint-bg);
+  --bubble-mine-text: var(--mint-text);
+  --bubble-mine-meta: #395B3E;
+  --bubble-mine-status: #185E28;
+  --bubble-mine-border: transparent;
+
+  --bubble-theirs-bg: #1D1F26;
+  --bubble-theirs-text: #FFFFFF;
+  --bubble-theirs-meta: var(--muted);
+  --bubble-theirs-border: var(--border);
+
+  --hop-chip-mine-bg: var(--lilac-bg);
+  --hop-chip-mine-text: var(--lilac-text);
+  --hop-chip-theirs-bg: var(--elevated);
+  --hop-chip-theirs-text: var(--muted);
+
+  --composer-bg: #17181D;
+  --composer-input-bg: #202229;
+  --composer-send-bg: #FFFFFF;
+  --composer-send-text: #0E0F12;
+
+  --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-dock: 0 -8px 24px rgba(0, 0, 0, 0.35);
 }
 
+/* =========================================================
+   LIGHT THEME (The Reverse!)
+   Inverts colors cleanly with pale sage background & rich charcoal cards
+   ========================================================= */
 [data-theme="light"] {
-  --bg: #F8FAFC;
+  --bg: #E8EFE6;
   --surface: #FFFFFF;
-  --elevated: #F1F5F9;
-  --text: #0F172A;
-  --muted: #64748B;
-  --accent: #0D9488;
-  --accent-glow: rgba(13, 148, 136, 0.2);
-  --success: #10B981;
-  --warning: #D97706;
-  --danger: #EF4444;
-  --danger-glow: rgba(239, 68, 68, 0.25);
-  --shadow-soft: 0 4px 16px rgba(15, 23, 42, 0.08);
-  --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.12);
+  --elevated: #F2F7F1;
+  --elevated-hover: #E6EFE4;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --border-active: rgba(0, 0, 0, 0.18);
+
+  --text: #101317;
+  --text-secondary: #2B2F38;
+  --muted: #666D7C;
+  --muted-subtle: #989EA9;
+
+  /* Reversed Card & Component Specifics */
+  --banner-bg: #14161C;
+  --banner-text: #FFFFFF;
+  --banner-subtext: #A6ABB8;
+  --banner-badge-bg: var(--mint-bg);
+  --banner-badge-text: var(--mint-text);
+  --banner-btn-bg: #FFFFFF;
+  --banner-btn-text: #14161C;
+
+  --bubble-mine-bg: #14161C;
+  --bubble-mine-text: #FFFFFF;
+  --bubble-mine-meta: #A4A9B7;
+  --bubble-mine-status: #489B55;
+  --bubble-mine-border: transparent;
+
+  --bubble-theirs-bg: #FFFFFF;
+  --bubble-theirs-text: #101317;
+  --bubble-theirs-meta: var(--muted);
+  --bubble-theirs-border: var(--border);
+
+  --hop-chip-mine-bg: #DCE8DA;
+  --hop-chip-mine-text: #17361D;
+  --hop-chip-theirs-bg: var(--elevated);
+  --hop-chip-theirs-text: var(--muted);
+
+  --composer-bg: #FFFFFF;
+  --composer-input-bg: #F2F7F1;
+  --composer-send-bg: #14161C;
+  --composer-send-text: #FFFFFF;
+
+  --shadow-soft: 0 4px 16px rgba(16, 19, 23, 0.06);
+  --shadow-card: 0 10px 30px rgba(16, 19, 23, 0.09);
+  --shadow-dock: 0 -8px 24px rgba(16, 19, 23, 0.08);
 }
 
-/* Base resets */
+/* =========================================================
+   Base Resets & Container
+   ========================================================= */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -67,9 +171,9 @@ html, body {
   overflow: hidden;
   font-size: 15px;
   line-height: 1.5;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
-/* App container */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -79,11 +183,12 @@ html, body {
   margin: 0 auto;
   position: relative;
   background-color: var(--bg);
+  overflow: hidden;
+  transition: background-color var(--transition-normal);
 }
 
-/* Accessibility focus */
 button:focus-visible, input:focus-visible, select:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--mint-accent);
   outline-offset: 2px;
 }
 
@@ -91,21 +196,20 @@ button:focus-visible, input:focus-visible, select:focus-visible {
    1. Header
    ========================================================= */
 .app-header {
-  height: 64px;
-  background-color: var(--surface);
-  border-bottom: 1px solid var(--elevated);
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-2);
-  z-index: 10;
-  box-shadow: var(--shadow-soft);
+  z-index: 20;
+  background-color: var(--bg);
+  transition: background-color var(--transition-normal);
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 10px;
 }
 
 .connection-dot {
@@ -113,20 +217,21 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   height: 10px;
   border-radius: 50%;
   background-color: var(--success);
-  box-shadow: 0 0 8px var(--success);
-  transition: background-color var(--transition-fast);
+  box-shadow: 0 0 10px var(--success);
+  transition: all var(--transition-fast);
 }
 
 .connection-dot.disconnected {
   background-color: var(--danger);
-  box-shadow: 0 0 8px var(--danger);
+  box-shadow: 0 0 10px var(--danger);
   animation: pulse 1.5s infinite;
 }
 
 .node-title {
   font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 .header-actions {
@@ -135,54 +240,37 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   gap: var(--space-1);
 }
 
-.icon-btn {
-  background: var(--elevated);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  color: var(--text);
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), transform var(--transition-fast);
-}
-
-.icon-btn:hover {
-  background-color: var(--accent-glow);
-  color: var(--accent);
-}
-
-.icon-btn:active {
-  transform: scale(0.95);
-}
-
 .neighbor-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  height: 44px;
-  background: var(--elevated);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  gap: 7px;
+  padding: 0 14px;
+  height: 38px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
   color: var(--text);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
+  box-shadow: var(--shadow-soft);
   transition: all var(--transition-fast);
 }
 
 .neighbor-btn:hover {
-  border-color: var(--accent);
+  background: var(--elevated-hover);
+  transform: translateY(-1px);
+}
+
+.neighbor-btn:active {
+  transform: scale(0.96);
 }
 
 .signal-bars {
   display: flex;
   align-items: flex-end;
-  gap: 2px;
-  height: 14px;
+  gap: 2.5px;
+  height: 13px;
 }
 
 .signal-bar {
@@ -196,11 +284,259 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .bar-3 { height: 13px; }
 
 .signal-bar.active {
-  background-color: var(--accent);
+  background-color: var(--mint-accent);
+}
+
+.icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-soft);
+  transition: all var(--transition-fast);
+}
+
+.icon-btn:hover {
+  background: var(--elevated-hover);
+  transform: scale(1.05);
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
 }
 
 /* =========================================================
-   2. Chat Area
+   2. Inspiration Featured Mesh Banner Card
+   ========================================================= */
+.mesh-banner-card {
+  margin: 4px var(--space-2) var(--space-1) var(--space-2);
+  padding: 16px 18px;
+  background-color: var(--banner-bg);
+  color: var(--banner-text);
+  border-radius: var(--radius-banner);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+/* Subtle decorative pastel corner gradient */
+.mesh-banner-card::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle, rgba(214, 199, 247, 0.35) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.banner-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.banner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--banner-badge-bg);
+  color: var(--banner-badge-text);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--success);
+  box-shadow: 0 0 6px var(--success);
+  animation: pulse 1.8s infinite;
+}
+
+.banner-route-tag {
+  background: var(--lilac-bg);
+  color: var(--lilac-text);
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.banner-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 2px;
+}
+
+.banner-subtitle {
+  font-size: 0.78rem;
+  color: var(--banner-subtext);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.banner-avatars-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.banner-avatars {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+}
+
+.banner-avatars::-webkit-scrollbar {
+  display: none;
+}
+
+.banner-avatar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.banner-avatar-item:hover {
+  transform: translateY(-2px);
+}
+
+.banner-avatar-item:active {
+  transform: scale(0.95);
+}
+
+/* Avatar Ring Wrapper matching inspiration avatars */
+.avatar-ring-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 2.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.avatar-ring-wrapper.small {
+  width: 38px;
+  height: 38px;
+  padding: 2px;
+}
+
+.avatar-circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Avatar Pastel Ring Colors */
+.ring-mint {
+  background: var(--mint-border);
+}
+.ring-mint .avatar-circle {
+  background: var(--mint-bg);
+  color: var(--mint-text);
+}
+
+.ring-lilac {
+  background: var(--lilac-border);
+}
+.ring-lilac .avatar-circle {
+  background: var(--lilac-bg);
+  color: var(--lilac-text);
+}
+
+.ring-butter {
+  background: var(--butter-border);
+}
+.ring-butter .avatar-circle {
+  background: var(--butter-bg);
+  color: var(--butter-text);
+}
+
+.ring-coral {
+  background: #FFA5AE;
+}
+.ring-coral .avatar-circle {
+  background: var(--coral-bg);
+  color: var(--coral-text);
+}
+
+.ring-muted {
+  background: var(--muted-subtle);
+}
+.ring-muted .avatar-circle {
+  background: var(--elevated);
+  color: var(--muted);
+}
+
+.avatar-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--banner-text);
+  white-space: nowrap;
+}
+
+.banner-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--banner-btn-bg);
+  color: var(--banner-btn-text);
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all var(--transition-fast);
+}
+
+.banner-action-btn:hover {
+  transform: scale(1.05);
+}
+
+.banner-action-btn:active {
+  transform: scale(0.96);
+}
+
+/* =========================================================
+   3. Chat Container & Messages
    ========================================================= */
 .chat-container {
   flex: 1;
@@ -208,44 +544,47 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   padding: var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 12px;
   scroll-behavior: smooth;
   overscroll-behavior-y: contain;
 }
 
-/* Empty state */
+/* Empty State */
 .empty-state {
   margin: auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: var(--space-3);
+  padding: var(--space-4) var(--space-3);
   background: var(--surface);
   border-radius: var(--radius-card);
-  border: 1px dashed var(--muted);
+  border: 1px dashed var(--border);
   box-shadow: var(--shadow-soft);
 }
 
 .empty-state-icon {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   margin-bottom: var(--space-2);
-  color: var(--accent);
+  color: var(--mint-accent);
 }
 
 .empty-state h3 {
-  font-size: 1.1rem;
-  margin-bottom: var(--space-1);
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: var(--text);
 }
 
 .empty-state p {
   color: var(--muted);
-  font-size: 0.9rem;
-  max-width: 280px;
+  font-size: 0.88rem;
+  max-width: 290px;
+  line-height: 1.45;
 }
 
-/* Message bubbles */
+/* Message Rows */
 .message-row {
   display: flex;
   flex-direction: column;
@@ -262,62 +601,88 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 
 .message-bubble {
   max-width: 82%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: var(--radius-bubble);
   word-wrap: break-word;
   position: relative;
   box-shadow: var(--shadow-soft);
+  transition: transform var(--transition-fast);
 }
 
+/* Sent by me */
 .message-row.mine .message-bubble {
-  background: var(--elevated);
-  border: 1px solid var(--accent);
-  color: var(--text);
-  border-bottom-right-radius: 4px;
+  background-color: var(--bubble-mine-bg);
+  color: var(--bubble-mine-text);
+  border: 1px solid var(--bubble-mine-border);
+  border-bottom-right-radius: 6px;
 }
 
+/* Received from peers */
 .message-row.theirs .message-bubble {
-  background: var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  color: var(--text);
-  border-bottom-left-radius: 4px;
+  background-color: var(--bubble-theirs-bg);
+  color: var(--bubble-theirs-text);
+  border: 1px solid var(--bubble-theirs-border);
+  border-bottom-left-radius: 6px;
 }
 
 .sender-name {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 2px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--lilac-accent);
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+[data-theme="light"] .sender-name {
+  color: #6439B8;
 }
 
 .message-content {
   font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .message-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  font-size: 0.72rem;
-  color: var(--muted);
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
 .message-row.mine .message-meta {
   justify-content: flex-end;
+  color: var(--bubble-mine-meta);
+}
+
+.message-row.theirs .message-meta {
+  color: var(--bubble-theirs-meta);
 }
 
 .hop-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--elevated);
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: var(--radius-chip);
-  font-size: 0.7rem;
-  color: var(--muted);
-  font-weight: 600;
+  font-size: 0.68rem;
+  font-weight: 700;
   margin-top: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.message-row.mine .hop-chip {
+  background: var(--hop-chip-mine-bg);
+  color: var(--hop-chip-mine-text);
+}
+
+.message-row.theirs .hop-chip {
+  background: var(--hop-chip-theirs-bg);
+  color: var(--hop-chip-theirs-text);
+  border: 1px solid var(--border-subtle);
 }
 
 .status-icon {
@@ -326,108 +691,124 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 .status-icon.delivered {
-  color: var(--accent);
+  color: var(--bubble-mine-status);
 }
 
 /* Emergency chat bubble */
 .message-bubble.emergency {
-  background: rgba(255, 77, 94, 0.15) !important;
+  background: var(--coral-bg) !important;
+  color: var(--coral-text) !important;
   border: 1px solid var(--danger) !important;
 }
 
 .message-bubble.emergency .sender-name {
-  color: var(--danger);
+  color: var(--danger) !important;
 }
 
 /* =========================================================
-   3. Composer Fixed Bottom
+   4. Floating Composer Dock (Matching Inspo)
    ========================================================= */
 .composer-container {
-  background-color: var(--surface);
-  border-top: 1px solid var(--elevated);
-  padding: var(--space-1) var(--space-2);
+  background-color: var(--composer-bg);
+  border-top: 1px solid var(--border);
+  padding: 10px var(--space-2) calc(10px + env(safe-area-inset-bottom, 0px)) var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+  gap: 8px;
+  box-shadow: var(--shadow-dock);
+  z-index: 30;
+  transition: background-color var(--transition-normal);
 }
 
 .composer-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-1);
 }
 
 .dest-select-wrapper {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--muted);
-  flex: 1;
+  font-weight: 600;
+  width: 100%;
 }
 
 .dest-select {
-  background: var(--elevated);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex: 1;
+  background: var(--composer-input-bg);
+  border: 1px solid var(--border);
   color: var(--text);
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 0.82rem;
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
   cursor: pointer;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.dest-select:focus {
+  border-color: var(--mint-accent);
 }
 
 .composer-row {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 8px;
 }
 
 .message-input {
   flex: 1;
   height: 48px;
-  background: var(--elevated);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 0 16px;
-  font-size: 0.95rem;
+  background: var(--composer-input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 0 18px;
+  font-size: 0.94rem;
+  font-weight: 500;
   color: var(--text);
   outline: none;
-  transition: border-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .message-input:focus {
-  border-color: var(--accent);
+  border-color: var(--mint-accent);
+  box-shadow: 0 0 10px rgba(72, 155, 85, 0.2);
 }
 
+.message-input::placeholder {
+  color: var(--muted);
+}
+
+/* Circular Send Button matching inspiration center icon */
 .send-btn {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--accent);
-  color: #0B1220;
+  background: var(--composer-send-bg);
+  color: var(--composer-send-text);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   transition: all var(--transition-fast);
   flex-shrink: 0;
 }
 
 .send-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 12px var(--accent-glow);
+  transform: scale(1.06);
 }
 
 .send-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.94);
 }
 
-/* =========================================================
-   4. Emergency Button (1.5s press-and-hold)
-   ========================================================= */
+/* SOS Button */
 .emergency-btn-wrapper {
   position: relative;
   width: 48px;
@@ -440,8 +821,8 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 .emergency-btn {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background-color: var(--danger);
   border: none;
@@ -454,7 +835,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   letter-spacing: 0.5px;
   cursor: pointer;
   z-index: 2;
-  box-shadow: 0 0 10px var(--danger-glow);
+  box-shadow: 0 0 12px var(--danger-glow);
   transition: transform var(--transition-fast);
 }
 
@@ -488,13 +869,13 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 /* =========================================================
-   5. Bottom Sheet (Neighbors List)
+   5. Bottom Sheet (Mesh Neighbors)
    ========================================================= */
 .bottom-sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
   z-index: 50;
   opacity: 0;
   pointer-events: none;
@@ -514,9 +895,9 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   max-width: 480px;
   margin: 0 auto;
   background: var(--surface);
-  border-top-left-radius: var(--radius-card);
-  border-top-right-radius: var(--radius-card);
-  padding: var(--space-3) var(--space-2);
+  border-top-left-radius: var(--radius-banner);
+  border-top-right-radius: var(--radius-banner);
+  padding: var(--space-3) var(--space-2) calc(var(--space-3) + env(safe-area-inset-bottom, 0px)) var(--space-2);
   z-index: 51;
   transform: translateY(100%);
   transition: transform var(--transition-normal);
@@ -524,6 +905,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   max-height: 80vh;
   display: flex;
   flex-direction: column;
+  border-top: 1px solid var(--border);
 }
 
 .bottom-sheet-backdrop.open .bottom-sheet {
@@ -531,10 +913,10 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 .bottom-sheet-handle {
-  width: 40px;
-  height: 4px;
-  background: var(--muted);
-  border-radius: 2px;
+  width: 44px;
+  height: 5px;
+  background: var(--muted-subtle);
+  border-radius: var(--radius-pill);
   margin: 0 auto var(--space-2) auto;
 }
 
@@ -543,13 +925,21 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-2);
+  padding: 0 4px;
+}
+
+.bottom-sheet-header h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .neighbors-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 8px;
   overflow-y: auto;
+  padding: 4px 0;
 }
 
 .neighbor-card {
@@ -558,22 +948,36 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   justify-content: space-between;
   padding: 12px 14px;
   background: var(--elevated);
-  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  transition: background-color var(--transition-fast);
+}
+
+.neighbor-card:hover {
+  background: var(--elevated-hover);
 }
 
 .neighbor-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.neighbor-card-info {
   display: flex;
   flex-direction: column;
 }
 
 .neighbor-card-name {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.95rem;
+  color: var(--text);
 }
 
 .neighbor-card-addr {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: var(--muted);
+  font-weight: 500;
 }
 
 .neighbor-card-right {
@@ -583,30 +987,32 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 .status-badge {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .status-badge.up {
-  background: rgba(52, 211, 153, 0.15);
+  background: rgba(52, 211, 153, 0.16);
   color: var(--success);
 }
 
 .status-badge.down {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.16);
   color: var(--danger);
 }
 
 /* =========================================================
-   6. Incoming Emergency Overlay
+   6. Incoming Emergency Full-Screen Overlay
    ========================================================= */
 .emergency-overlay {
   position: fixed;
   inset: 0;
   background: rgba(185, 28, 28, 0.96);
+  backdrop-filter: blur(12px);
   z-index: 100;
   display: none;
   flex-direction: column;
@@ -668,7 +1074,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   background: #FFFFFF;
   color: #991B1B;
   border: none;
-  border-radius: 27px;
+  border-radius: var(--radius-pill);
   font-size: 1.1rem;
   font-weight: 800;
   cursor: pointer;
@@ -681,11 +1087,11 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 /* =========================================================
-   7. Toasts for Neighbor Events
+   7. Toast Notifications
    ========================================================= */
 .toast-container {
   position: fixed;
-  top: 72px;
+  top: 68px;
   left: var(--space-2);
   right: var(--space-2);
   max-width: 440px;
@@ -699,15 +1105,15 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 
 .toast {
   padding: 10px 14px;
-  border-radius: 12px;
+  border-radius: var(--radius-button);
   background: var(--surface);
-  border: 1px solid var(--elevated);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-card);
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
   animation: slideDown 250ms forwards;
 }
@@ -720,9 +1126,11 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   border-left: 4px solid var(--danger);
 }
 
-/* Animations */
+/* =========================================================
+   Animations
+   ========================================================= */
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -732,8 +1140,8 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.92); }
 }
 
 @keyframes pulseEmergency {
@@ -747,7 +1155,6 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   75% { transform: rotate(8deg); }
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

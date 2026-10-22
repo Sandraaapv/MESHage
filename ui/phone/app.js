@@ -27,6 +27,13 @@
     headerSignalBars: document.getElementById("headerSignalBars"),
     themeToggleBtn: document.getElementById("themeToggleBtn"),
     themeIcon: document.getElementById("themeIcon"),
+    meshBannerCard: document.getElementById("meshBannerCard"),
+    bannerStatusText: document.getElementById("bannerStatusText"),
+    bannerRouteTag: document.getElementById("bannerRouteTag"),
+    bannerTitle: document.getElementById("bannerTitle"),
+    bannerSubtitle: document.getElementById("bannerSubtitle"),
+    bannerAvatars: document.getElementById("bannerAvatars"),
+    bannerActionBtn: document.getElementById("bannerActionBtn"),
     chatContainer: document.getElementById("chatContainer"),
     emptyState: document.getElementById("emptyState"),
     destSelect: document.getElementById("destSelect"),
@@ -62,6 +69,10 @@
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("meshage_theme", theme);
     els.themeIcon.innerHTML = theme === "dark" ? icons.moon : icons.sun;
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute("content", theme === "dark" ? "#0F1013" : "#E8EFE6");
+    }
   }
 
   function toggleTheme() {
@@ -119,6 +130,70 @@
 
     // update destination dropdown options
     updateDestDropdown();
+
+    // update the inspiration-style feature banner card
+    updateBanner();
+  }
+
+  function updateBanner() {
+    if (!els.bannerTitle) return;
+    const upNeighbors = state.neighbors.filter((n) => n.status === "UP");
+    els.bannerTitle.textContent = `Node ${state.nodeName} Mesh Radio`;
+    
+    if (upNeighbors.length > 0) {
+      els.bannerStatusText.textContent = `${upNeighbors.length} ${upNeighbors.length === 1 ? "Peer" : "Peers"} Active`;
+      els.bannerSubtitle.textContent = "Offline P2P Multi-Hop • AES-256 Encrypted";
+      if (els.bannerRouteTag) {
+        els.bannerRouteTag.textContent = `${upNeighbors.length} Linked`;
+      }
+    } else {
+      els.bannerStatusText.textContent = "Scanning...";
+      els.bannerSubtitle.textContent = "Looking for peers on Wi-Fi UDP port 5001";
+      if (els.bannerRouteTag) {
+        els.bannerRouteTag.textContent = "Ready";
+      }
+    }
+
+    // Avatars row matching Inspiration
+    const ringClasses = ["ring-mint", "ring-lilac", "ring-butter", "ring-coral"];
+    let avatarsHtml = `
+      <div class="banner-avatar-item is-you" title="Your Node (${state.nodeName})">
+        <div class="avatar-ring-wrapper ring-mint">
+          <div class="avatar-circle">
+            <span>${escapeHtml(state.nodeName.slice(0, 2).toUpperCase())}</span>
+          </div>
+        </div>
+        <span class="avatar-label">You</span>
+      </div>
+    `;
+
+    upNeighbors.forEach((n, idx) => {
+      const ringClass = ringClasses[(idx + 1) % ringClasses.length];
+      avatarsHtml += `
+        <div class="banner-avatar-item is-peer" data-name="${escapeHtml(n.name)}" title="Select Node ${escapeHtml(n.name)}">
+          <div class="avatar-ring-wrapper ${ringClass}">
+            <div class="avatar-circle">
+              <span>${escapeHtml(n.name.slice(0, 2).toUpperCase())}</span>
+            </div>
+          </div>
+          <span class="avatar-label">Node ${escapeHtml(n.name)}</span>
+        </div>
+      `;
+    });
+
+    els.bannerAvatars.innerHTML = avatarsHtml;
+
+    // Quick tap on avatar to select recipient
+    els.bannerAvatars.querySelectorAll(".banner-avatar-item.is-peer").forEach((item) => {
+      item.addEventListener("click", () => {
+        const target = item.getAttribute("data-name");
+        if (target && els.destSelect) {
+          els.destSelect.value = target;
+          els.messageInput.focus();
+          showToast(`Target set to Node ${target}`, "info");
+        }
+      });
+    });
   }
 
   function updateDestDropdown() {
@@ -142,18 +217,27 @@
       return;
     }
 
+    const ringClasses = ["ring-mint", "ring-lilac", "ring-butter", "ring-coral"];
     let html = "";
-    state.neighbors.forEach((n) => {
+    state.neighbors.forEach((n, idx) => {
       const isUp = n.status === "UP";
       const statusClass = isUp ? "up" : "down";
       const statusText = isUp ? "Connected" : "Disconnected";
       const lastSeen = n.last_seen_seconds ? `${n.last_seen_seconds}s ago` : "just now";
+      const ringClass = isUp ? ringClasses[(idx + 1) % ringClasses.length] : "ring-muted";
 
       html += `
         <div class="neighbor-card">
           <div class="neighbor-card-left">
-            <span class="neighbor-card-name">Node ${n.name}</span>
-            <span class="neighbor-card-addr">${n.address || "local link"} &bull; ${lastSeen}</span>
+            <div class="avatar-ring-wrapper ${ringClass} small">
+              <div class="avatar-circle">
+                <span>${escapeHtml(n.name.slice(0, 2).toUpperCase())}</span>
+              </div>
+            </div>
+            <div class="neighbor-card-info">
+              <span class="neighbor-card-name">Node ${escapeHtml(n.name)}</span>
+              <span class="neighbor-card-addr">${escapeHtml(n.address || "local link")} &bull; ${lastSeen}</span>
+            </div>
           </div>
           <div class="neighbor-card-right">
             <span class="status-badge ${statusClass}">${statusText}</span>
@@ -494,10 +578,15 @@
     els.ackEmergencyBtn.addEventListener("click", acknowledgeEmergency);
 
     // Bottom sheet open/close
-    els.openNeighborsBtn.addEventListener("click", () => {
+    const openSheet = () => {
       fetchState();
       els.bottomSheetBackdrop.classList.add("open");
-    });
+    };
+
+    els.openNeighborsBtn.addEventListener("click", openSheet);
+    if (els.bannerActionBtn) {
+      els.bannerActionBtn.addEventListener("click", openSheet);
+    }
 
     els.closeNeighborsBtn.addEventListener("click", () => {
       els.bottomSheetBackdrop.classList.remove("open");
